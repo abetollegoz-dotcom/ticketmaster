@@ -169,7 +169,7 @@ export interface SearchFilters {
   dateTo?: string;
   minPrice?: number;
   maxPrice?: number;
-  sortBy?: "date" | "price_asc" | "price_desc" | "popularity";
+  sortBy?: "date" | "price_asc" | "price_desc" | "popularity" | "trending";
   page?: number;
   limit?: number;
 }
