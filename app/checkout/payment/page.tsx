@@ -4,6 +4,7 @@ import { useCartStore } from "@/store";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { formatCurrency } from "@/lib/utils";
+import { useSession } from "next-auth/react";
 import { toast } from "@/components/ui/toaster";
 import { useRouter } from "next/navigation";
 
@@ -50,26 +51,40 @@ function CheckoutForm({ clientSecret }: { clientSecret: string }) {
 export default function PaymentPage() {
   const { items, getSummary } = useCartStore();
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const { data: session, status } = useSession();
   const summary = getSummary();
   const router = useRouter();
 
   useEffect(() => {
+    if (status === "unauthenticated") {
+      toast.error("Please login", "You need to be logged in to complete your purchase.");
+      router.push(`/login?callbackUrl=/checkout/payment`);
+      return;
+    }
+
     if (items.length === 0) {
       router.push("/checkout/cart");
       return;
     }
 
-    fetch("/api/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) setClientSecret(data.data.clientSecret);
-        else toast.error("Checkout error", data.error);
-      });
-  }, [items, router]);
+    if (status === "authenticated") {
+      fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) setClientSecret(data.data.clientSecret);
+          else {
+            toast.error("Checkout error", data.error);
+            if (data.error === "Unauthorized") {
+              router.push("/login?callbackUrl=/checkout/payment");
+            }
+          }
+        });
+    }
+  }, [items, router, status]);
 
   if (!clientSecret) {
     return (
