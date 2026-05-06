@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
   const parsed = RegisterSchema.safeParse(body);
-  if (!parsed.success) return apiError(parsed.error.errors[0].message, 400);
+  if (!parsed.success) return apiError(parsed.error.issues[0].message, 400);
 
   const { name, email, password } = parsed.data;
 
