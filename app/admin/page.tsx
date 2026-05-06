@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { formatCurrency, formatNumber } from "@/lib/utils";
+import Link from "next/link";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -85,9 +86,9 @@ export default function AdminDashboard() {
                 </thead>
                 <tbody className="divide-y divide-white/5">
                   {[
-                    { name: "Electronic Beats Night", org: "Neon Pulse", status: "Pending", date: "Oct 12, 2024" },
-                    { name: "Global Tech Summit", org: "InnoCorp", status: "Pending", date: "Nov 05, 2024" },
-                    { name: "Underground Jazz", org: "Blue Note", status: "Pending", date: "Oct 28, 2024" },
+                    { id: "cm32abc", name: "Electronic Beats Night", org: "Neon Pulse", status: "Pending", date: "Oct 12, 2024" },
+                    { id: "cm32def", name: "Global Tech Summit", org: "InnoCorp", status: "Pending", date: "Nov 05, 2024" },
+                    { id: "cm32ghi", name: "Underground Jazz", org: "Blue Note", status: "Pending", date: "Oct 28, 2024" },
                   ].map((event, i) => (
                     <tr key={i} className="hover:bg-white/2 transition-colors">
                       <td className="px-6 py-4">
@@ -108,9 +109,9 @@ export default function AdminDashboard() {
                           <button className="p-2 hover:bg-red-500/20 text-red-400 rounded-lg" title="Reject">
                             <Ban className="w-4 h-4" />
                           </button>
-                          <button className="p-2 hover:bg-white/10 text-muted rounded-lg">
+                          <Link href={`/admin/events/${event.id}/edit`} className="p-2 hover:bg-indigo-500/20 text-indigo-400 rounded-lg" title="Edit">
                             <MoreVertical className="w-4 h-4" />
-                          </button>
+                          </Link>
                         </div>
                       </td>
                     </tr>

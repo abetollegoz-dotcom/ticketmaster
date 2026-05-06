@@ -104,14 +104,17 @@ export default function OrganizerDashboard() {
             <h2 className="text-xl font-bold mb-6">Top Events</h2>
             <div className="flex flex-col gap-6">
               {[
-                { name: "Summer Music Fest", sold: 245, revenue: 12250 },
-                { name: "Tech Conference", sold: 182, revenue: 36400 },
-                { name: "Art Workshop", sold: 55, revenue: 2750 },
+                { id: "cm32abc", name: "Summer Music Fest", sold: 245, revenue: 12250 },
+                { id: "cm32def", name: "Tech Conference", sold: 182, revenue: 36400 },
+                { id: "cm32ghi", name: "Art Workshop", sold: 55, revenue: 2750 },
               ].map((event, i) => (
                 <div key={i}>
-                  <div className="flex justify-between text-sm font-semibold mb-2">
+                  <div className="flex justify-between text-sm font-semibold mb-2 items-center">
                     <span>{event.name}</span>
-                    <span>{formatCurrency(event.revenue)}</span>
+                    <div className="flex items-center gap-3">
+                      <span>{formatCurrency(event.revenue)}</span>
+                      <Link href={`/organizer/events/${event.id}/edit`} className="text-[10px] bg-white/10 hover:bg-white/20 px-2 py-1 rounded">Edit</Link>
+                    </div>
                   </div>
                   <div className="h-2 rounded-full bg-white/5 overflow-hidden">
                     <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${(event.sold / 300) * 100}%` }} />
