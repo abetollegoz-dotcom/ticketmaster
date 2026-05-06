@@ -8,7 +8,8 @@ import { useSession } from "next-auth/react";
 import { toast } from "@/components/ui/toaster";
 import { useRouter } from "next/navigation";
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+const STRIPE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+const stripePromise = STRIPE_KEY ? loadStripe(STRIPE_KEY) : null;
 
 function CheckoutForm({ clientSecret }: { clientSecret: string }) {
   const stripe = useStripe();
@@ -73,7 +74,13 @@ export default function PaymentPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ items }),
       })
-        .then((res) => res.json())
+        .then(async (res) => {
+          if (!res.ok) {
+            const errorText = await res.text();
+            throw new Error(errorText || `Server error: ${res.status}`);
+          }
+          return res.json();
+        })
         .then((data) => {
           if (data.success) setClientSecret(data.data.clientSecret);
           else {
@@ -82,6 +89,10 @@ export default function PaymentPage() {
               router.push("/login?callbackUrl=/checkout/payment");
             }
           }
+        })
+        .catch((err) => {
+          console.error("Payment setup error:", err);
+          toast.error("Payment setup failed", "Could not initialize checkout. Please check your connection or try again later.");
         });
     }
   }, [items, router, status]);
@@ -89,7 +100,9 @@ export default function PaymentPage() {
   if (!clientSecret) {
     return (
       <div className="container py-24 text-center">
-        <div className="skeleton w-full max-w-md h-96 mx-auto rounded-2xl" />
+        <div className="skeleton w-full max-w-md h-96 mx-auto rounded-2xl mb-8" />
+        <p className="text-secondary animate-pulse">Initializing secure checkout...</p>
+        {status === "unauthenticated" && <p className="text-red-400 mt-4">You are not logged in.</p>}
       </div>
     );
   }
@@ -115,9 +128,16 @@ export default function PaymentPage() {
         </div>
 
         <div className="card p-6">
-          <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "night" } }}>
-            <CheckoutForm clientSecret={clientSecret} />
-          </Elements>
+          {!stripePromise ? (
+            <div className="text-center py-8">
+              <p className="text-red-400 font-bold mb-2">Configuration Error</p>
+              <p className="text-xs text-secondary">Stripe key is missing in environment variables.</p>
+            </div>
+          ) : (
+            <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "night" } }}>
+              <CheckoutForm clientSecret={clientSecret} />
+            </Elements>
+          )}
         </div>
       </div>
     </div>
