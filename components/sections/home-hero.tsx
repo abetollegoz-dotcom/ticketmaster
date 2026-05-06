@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { Search, Play, ArrowRight, Star } from "lucide-react";
+import { Search, ArrowRight, Star } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -143,9 +143,6 @@ export function HomeHero() {
           >
             <Link href="/events" className="btn-primary py-3.5 px-7 text-base">
               Browse All Events <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link href="/organizer/register" className="btn-ghost py-3.5 px-7 text-base text-white border-white/20">
-              <Play className="w-4 h-4" /> Sell Tickets
             </Link>
           </motion.div>
         </div>
