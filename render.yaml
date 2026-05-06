@@ -17,7 +17,7 @@ services:
       - key: REDIS_URL
         fromService:
           name: eventhub-pro-redis
-          type: redis
+          type: keyvalue
           property: connectionString
       - key: NEXTAUTH_URL
         sync: false
@@ -61,7 +61,7 @@ services:
       - key: REDIS_URL
         fromService:
           name: eventhub-pro-redis
-          type: redis
+          type: keyvalue
           property: connectionString
 
   # ── Cron — Dynamic Pricing ────────────────────────────────
@@ -94,13 +94,14 @@ services:
       - key: STRIPE_SECRET_KEY
         sync: false
 
+  # ── Redis (Key-Value Store) ──────────────────────────────
+  - type: keyvalue
+    name: eventhub-pro-redis
+    plan: free
+    maxmemoryPolicy: allkeys-lru
+
 databases:
   - name: eventhub-pro-db
     plan: free
     databaseName: eventhub_pro
     user: eventhub
-
-redis:
-  - name: eventhub-pro-redis
-    plan: free
-    maxmemoryPolicy: allkeys-lru
