@@ -162,6 +162,7 @@ export interface AdminStats {
 
 // ─── Search ───────────────────────────────────────────────────
 export interface SearchFilters {
+  [key: string]: string | number | undefined;
   query?: string;
   city?: string;
   category?: string;
