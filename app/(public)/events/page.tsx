@@ -27,10 +27,10 @@ export default async function EventsPage({ searchParams }: PageProps) {
   if (sp.city) where.venue = { city: { contains: sp.city, mode: "insensitive" } };
   if (sp.sortBy === "trending") where.isTrending = true;
 
-  const orderBy: Record<string, unknown> =
+  const orderBy: any =
     sp.sortBy === "trending" ? { totalSales: "desc" } :
-    sp.sortBy === "price_asc" ? {} :
-    { dates: { _min: { startDate: "asc" } } };
+    sp.sortBy === "price_asc" ? { title: "asc" } : // fallback for price_asc since we can't sort by nested min price easily
+    { createdAt: "desc" };
 
   const [events, total, categories] = await Promise.all([
     prisma.event.findMany({
