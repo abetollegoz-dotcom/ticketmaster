@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resendApiKey = process.env.RESEND_API_KEY || "re_fallback_123";
+const resend = new Resend(resendApiKey);
 const FROM = process.env.EMAIL_FROM || "EventHub Pro <noreply@eventhubpro.com>";
 
 interface SendEmailOptions {

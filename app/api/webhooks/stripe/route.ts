@@ -8,7 +8,7 @@ import { generateTicketNumber, generateToken } from "@/lib/utils";
 import { sendOrderConfirmation } from "@/lib/email";
 import { rdel, CacheKeys } from "@/lib/redis";
 
-export const config = { api: { bodyParser: false } };
+
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
