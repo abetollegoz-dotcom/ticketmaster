@@ -1,10 +1,10 @@
 import Stripe from "stripe";
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error("Missing STRIPE_SECRET_KEY environment variable");
-}
+// We don't throw an error here anymore to prevent build-time crashes.
+// The app will check for the key when it's actually used.
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY || "";
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+export const stripe = new Stripe(stripeSecretKey, {
   apiVersion: "2026-04-22.dahlia",
   typescript: true,
 });
@@ -19,6 +19,9 @@ export async function createPaymentIntent(
   currency: string = STRIPE_CURRENCY,
   metadata: Record<string, string> = {}
 ) {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error("Missing STRIPE_SECRET_KEY environment variable");
+  }
   return stripe.paymentIntents.create({
     amount,
     currency,
@@ -29,11 +32,17 @@ export async function createPaymentIntent(
 
 /** Retrieve payment intent */
 export async function getPaymentIntent(intentId: string) {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error("Missing STRIPE_SECRET_KEY");
+  }
   return stripe.paymentIntents.retrieve(intentId);
 }
 
 /** Create a Stripe Connect account for organizers */
 export async function createConnectAccount(email: string) {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error("Missing STRIPE_SECRET_KEY");
+  }
   return stripe.accounts.create({
     type: "express",
     email,
@@ -46,6 +55,9 @@ export async function createConnectAccount(email: string) {
 
 /** Generate onboarding link for organizer */
 export async function createAccountLink(accountId: string, returnUrl: string, refreshUrl: string) {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error("Missing STRIPE_SECRET_KEY");
+  }
   return stripe.accountLinks.create({
     account: accountId,
     return_url: returnUrl,
@@ -60,6 +72,9 @@ export async function transferToOrganizer(
   destinationAccountId: string,
   metadata: Record<string, string> = {}
 ) {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error("Missing STRIPE_SECRET_KEY");
+  }
   return stripe.transfers.create({
     amount,
     currency: STRIPE_CURRENCY,
@@ -70,6 +85,9 @@ export async function transferToOrganizer(
 
 /** Process a refund */
 export async function createRefund(chargeId: string, amount?: number) {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error("Missing STRIPE_SECRET_KEY");
+  }
   return stripe.refunds.create({
     charge: chargeId,
     ...(amount ? { amount } : {}),
