@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Ticket, Twitter, Instagram, Facebook, Youtube, Mail } from "lucide-react";
+import { Ticket, Share2, Instagram, Facebook, Youtube, Mail } from "lucide-react";
 
 const FOOTER_LINKS = {
   Discover: [
@@ -31,7 +31,7 @@ const FOOTER_LINKS = {
 };
 
 const SOCIAL = [
-  { icon: Twitter, href: "#", label: "Twitter" },
+  { icon: Share2, href: "#", label: "Share" },
   { icon: Instagram, href: "#", label: "Instagram" },
   { icon: Facebook, href: "#", label: "Facebook" },
   { icon: Youtube, href: "#", label: "YouTube" },
