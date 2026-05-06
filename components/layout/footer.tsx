@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Ticket, Share2, Instagram, Facebook, Youtube, Mail } from "lucide-react";
+import { Ticket, Share2, Camera, User, Video, Mail } from "lucide-react";
 
 const FOOTER_LINKS = {
   Discover: [
@@ -32,9 +32,9 @@ const FOOTER_LINKS = {
 
 const SOCIAL = [
   { icon: Share2, href: "#", label: "Share" },
-  { icon: Instagram, href: "#", label: "Instagram" },
-  { icon: Facebook, href: "#", label: "Facebook" },
-  { icon: Youtube, href: "#", label: "YouTube" },
+  { icon: Camera, href: "#", label: "Instagram" },
+  { icon: User, href: "#", label: "Facebook" },
+  { icon: Video, href: "#", label: "YouTube" },
   { icon: Mail, href: "mailto:support@eventhubpro.com", label: "Email" },
 ];
 
