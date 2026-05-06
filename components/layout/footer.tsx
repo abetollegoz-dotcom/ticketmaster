@@ -93,10 +93,7 @@ export function Footer() {
                   key={label}
                   href={href}
                   aria-label={label}
-                  className="w-9 h-9 rounded-lg glass flex items-center justify-center hover:border-indigo-500/40 transition-all"
-                  style={{ color: "var(--text-muted)" }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text-primary)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-muted)")}
+                  className="w-9 h-9 rounded-lg glass flex items-center justify-center hover:border-indigo-500/40 transition-all text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                 >
                   <Icon className="w-4 h-4" />
                 </a>
