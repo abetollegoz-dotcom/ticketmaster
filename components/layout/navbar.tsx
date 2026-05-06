@@ -158,10 +158,10 @@ export function Navbar() {
                 </div>
               ) : (
                 <div className="hidden sm:flex items-center gap-2">
-                  <Link href="/auth/login" className="btn-ghost text-sm py-2 px-4">
+                  <Link href="/login" className="btn-ghost text-sm py-2 px-4">
                     Sign In
                   </Link>
-                  <Link href="/auth/register" className="btn-primary text-sm py-2 px-4">
+                  <Link href="/register" className="btn-primary text-sm py-2 px-4">
                     Get Started
                   </Link>
                 </div>
@@ -232,8 +232,8 @@ export function Navbar() {
                 ))}
                 {!session && (
                   <div className="flex gap-2 mt-3 pt-3 border-t border-white/8">
-                    <Link href="/auth/login" className="btn-ghost text-sm py-2 flex-1 text-center">Sign In</Link>
-                    <Link href="/auth/register" className="btn-primary text-sm py-2 flex-1 text-center">Get Started</Link>
+                    <Link href="/login" className="btn-ghost text-sm py-2 flex-1 text-center">Sign In</Link>
+                    <Link href="/register" className="btn-primary text-sm py-2 flex-1 text-center">Get Started</Link>
                   </div>
                 )}
               </div>
