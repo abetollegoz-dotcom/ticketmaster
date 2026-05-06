@@ -92,7 +92,7 @@ export default function PaymentPage() {
         })
         .catch((err) => {
           console.error("Payment setup error:", err);
-          toast.error("Payment setup failed", "Could not initialize checkout. Please check your connection or try again later.");
+          toast.error("Payment setup failed", err.message || "Could not initialize checkout.");
         });
     }
   }, [items, router, status]);

@@ -19,6 +19,10 @@ const CheckoutSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return apiError("Stripe configuration is missing on the server (STRIPE_SECRET_KEY).", 500);
+  }
+
   const session = await auth();
   if (!session?.user) return apiError("Unauthorized", 401);
 
