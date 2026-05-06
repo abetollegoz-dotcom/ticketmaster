@@ -76,32 +76,36 @@ export function Navbar() {
             {/* Right actions */}
             <div className="flex items-center gap-2">
               {/* Search toggle */}
-              <button
+              <motion.button
+                whileHover={{ scale: 1.1, backgroundColor: "rgba(255,255,255,0.1)" }}
+                whileTap={{ scale: 0.9 }}
                 onClick={() => setSearchOpen(!searchOpen)}
-                className="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/5 transition-all"
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-[var(--text-secondary)] hover:text-indigo-400 transition-all"
                 aria-label="Search events"
               >
-                <Search className="w-4.5 h-4.5" />
-              </button>
+                <Search className="w-5 h-5" />
+              </motion.button>
 
               {/* Cart */}
-              <Link
-                href="/checkout/cart"
-                className="relative w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/5 transition-all"
-                aria-label={`Cart with ${cartCount} items`}
-              >
-                <ShoppingCart className="w-4.5 h-4.5" />
-                {cartCount > 0 && (
-                  <motion.span
-                    key={cartCount}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-[10px] font-bold flex items-center justify-center"
-                  >
-                    {cartCount > 9 ? "9+" : cartCount}
-                  </motion.span>
-                )}
-              </Link>
+              <motion.div whileHover={{ scale: 1.1 }}>
+                <Link
+                  href="/checkout/cart"
+                  className="relative w-10 h-10 rounded-xl flex items-center justify-center text-[var(--text-secondary)] hover:text-indigo-400 transition-all hover:bg-white/10"
+                  aria-label={`Cart with ${cartCount} items`}
+                >
+                  <ShoppingCart className="w-5 h-5" />
+                  {cartCount > 0 && (
+                    <motion.span
+                      key={cartCount}
+                      initial={{ scale: 0, y: 5 }}
+                      animate={{ scale: 1, y: 0 }}
+                      className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-[10px] font-bold flex items-center justify-center shadow-lg border-2 border-[#080812]"
+                    >
+                      {cartCount > 9 ? "9+" : cartCount}
+                    </motion.span>
+                  )}
+                </Link>
+              </motion.div>
 
               {/* Auth */}
               {session ? (
@@ -184,14 +188,22 @@ export function Navbar() {
                 className="overflow-hidden pb-4"
               >
                 <form action="/search" className="relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-[var(--text-muted)]" />
-                  <input
-                    autoFocus
-                    name="q"
-                    type="search"
-                    placeholder="Search events, artists, venues..."
-                    className="pl-12 pr-4 py-3 rounded-xl border-indigo-500/30 focus:border-indigo-500/60 text-sm"
-                  />
+                  <motion.div
+                    animate={{ 
+                      scale: searchOpen ? 1 : 0.95,
+                      opacity: searchOpen ? 1 : 0
+                    }}
+                    className="relative"
+                  >
+                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-indigo-400" />
+                    <input
+                      autoFocus
+                      name="q"
+                      type="search"
+                      placeholder="What are you looking for?"
+                      className="w-full pl-14 pr-6 py-4 rounded-2xl border-2 border-indigo-500/30 focus:border-indigo-500 bg-white/5 backdrop-blur-xl text-lg shadow-2xl transition-all outline-none"
+                    />
+                  </motion.div>
                 </form>
               </motion.div>
             )}
