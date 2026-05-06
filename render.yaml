@@ -64,41 +64,12 @@ services:
           type: keyvalue
           property: connectionString
 
-  # ── Cron — Dynamic Pricing ────────────────────────────────
-  - type: cron
-    name: eventhub-pricing-cron
-    runtime: node
-    plan: free
-    schedule: "*/15 * * * *"
-    buildCommand: npm ci && npx prisma generate
-    startCommand: node scripts/pricing-cron.js
-    envVars:
-      - key: DATABASE_URL
-        fromDatabase:
-          name: eventhub-pro-db
-          property: connectionString
-
-  # ── Cron — Payout Processing ──────────────────────────────
-  - type: cron
-    name: eventhub-payouts-cron
-    runtime: node
-    plan: free
-    schedule: "0 9 * * 1"
-    buildCommand: npm ci && npx prisma generate
-    startCommand: node scripts/payouts-cron.js
-    envVars:
-      - key: DATABASE_URL
-        fromDatabase:
-          name: eventhub-pro-db
-          property: connectionString
-      - key: STRIPE_SECRET_KEY
-        sync: false
-
   # ── Redis (Key-Value Store) ──────────────────────────────
   - type: keyvalue
     name: eventhub-pro-redis
     plan: free
     maxmemoryPolicy: allkeys-lru
+    ipAllowList: [] # Required for free tier or restricted access
 
 databases:
   - name: eventhub-pro-db
