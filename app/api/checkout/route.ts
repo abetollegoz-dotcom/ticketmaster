@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
   if (ticketTypes.length !== items.length) return apiError("One or more ticket types not found", 404);
 
   for (const item of items) {
-    const tt = ticketTypes.find(t => t.id === item.ticketTypeId);
+    const tt = ticketTypes.find((t: any) => t.id === item.ticketTypeId);
     if (!tt) return apiError("Ticket type not found", 404);
     if (tt.event.status !== "PUBLISHED") return apiError(`Event "${tt.event.title}" is not available`, 400);
     const available = tt.quantity - tt.quantitySold - tt.quantityReserved;
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
   // Calculate totals
   let subtotal = 0;
   for (const item of items) {
-    const tt = ticketTypes.find(t => t.id === item.ticketTypeId)!;
+    const tt = ticketTypes.find((t: any) => t.id === item.ticketTypeId)!;
     subtotal += Number(tt.price) * item.quantity;
   }
   for (const u of upsells) subtotal += u.price * u.quantity;
@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
       expiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 min
       items: {
         create: items.map(item => {
-          const tt = ticketTypes.find(t => t.id === item.ticketTypeId)!;
+          const tt = ticketTypes.find((t: any) => t.id === item.ticketTypeId)!;
           return {
             eventId: item.eventId,
             eventDateId: item.eventDateId,
@@ -129,7 +129,7 @@ export async function POST(req: NextRequest) {
   });
 
   // Reserve stock
-  await Promise.all(items.map(item =>
+  await Promise.all(items.map((item: any) =>
     prisma.ticketType.update({
       where: { id: item.ticketTypeId },
       data: { quantityReserved: { increment: item.quantity } },

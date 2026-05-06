@@ -1,7 +1,18 @@
 import { Resend } from "resend";
 
-const resendApiKey = process.env.RESEND_API_KEY || "re_fallback_123";
-const resend = new Resend(resendApiKey);
+let resendInstance: Resend | null = null;
+
+function getResend() {
+  if (!resendInstance) {
+    const resendApiKey = process.env.RESEND_API_KEY;
+    if (!resendApiKey) {
+      throw new Error("RESEND_API_KEY is missing. Please add it to your .env.local file.");
+    }
+    resendInstance = new Resend(resendApiKey);
+  }
+  return resendInstance;
+}
+
 const FROM = process.env.EMAIL_FROM || "EventHub Pro <noreply@eventhubpro.com>";
 
 interface SendEmailOptions {
@@ -13,7 +24,7 @@ interface SendEmailOptions {
 
 export async function sendEmail({ to, subject, html, replyTo }: SendEmailOptions) {
   try {
-    const result = await resend.emails.send({
+    const result = await getResend().emails.send({
       from: FROM,
       to: Array.isArray(to) ? to : [to],
       subject,

@@ -1,12 +1,38 @@
 import Stripe from "stripe";
 
-// We don't throw an error here anymore to prevent build-time crashes.
-// The app will check for the key when it's actually used.
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY || "";
+let stripeInstance: Stripe | null = null;
 
-export const stripe = new Stripe(stripeSecretKey, {
-  apiVersion: "2026-04-22.dahlia",
-  typescript: true,
+/**
+ * Lazy-load Stripe instance to prevent crashes during module evaluation
+ * if the environment variables are missing.
+ */
+export function getStripe(): Stripe {
+  if (!stripeInstance) {
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    if (!stripeSecretKey) {
+      throw new Error("STRIPE_SECRET_KEY is missing. Please add it to your .env.local file.");
+    }
+    stripeInstance = new Stripe(stripeSecretKey, {
+      apiVersion: "2026-04-22.dahlia" as any,
+      typescript: true,
+    });
+  }
+  return stripeInstance;
+}
+
+/**
+ * Proxy for Stripe instance that initializes on first use.
+ * This maintains compatibility with existing code that imports { stripe }.
+ */
+export const stripe = new Proxy({} as Stripe, {
+  get(target, prop, receiver) {
+    const instance = getStripe();
+    const value = Reflect.get(instance, prop, receiver);
+    if (typeof value === 'function') {
+      return value.bind(instance);
+    }
+    return value;
+  }
 });
 
 export const STRIPE_CURRENCY = "usd";
@@ -19,10 +45,7 @@ export async function createPaymentIntent(
   currency: string = STRIPE_CURRENCY,
   metadata: Record<string, string> = {}
 ) {
-  if (!process.env.STRIPE_SECRET_KEY) {
-    throw new Error("Missing STRIPE_SECRET_KEY environment variable");
-  }
-  return stripe.paymentIntents.create({
+  return getStripe().paymentIntents.create({
     amount,
     currency,
     metadata,
@@ -32,18 +55,12 @@ export async function createPaymentIntent(
 
 /** Retrieve payment intent */
 export async function getPaymentIntent(intentId: string) {
-  if (!process.env.STRIPE_SECRET_KEY) {
-    throw new Error("Missing STRIPE_SECRET_KEY");
-  }
-  return stripe.paymentIntents.retrieve(intentId);
+  return getStripe().paymentIntents.retrieve(intentId);
 }
 
 /** Create a Stripe Connect account for organizers */
 export async function createConnectAccount(email: string) {
-  if (!process.env.STRIPE_SECRET_KEY) {
-    throw new Error("Missing STRIPE_SECRET_KEY");
-  }
-  return stripe.accounts.create({
+  return getStripe().accounts.create({
     type: "express",
     email,
     capabilities: {
@@ -55,10 +72,7 @@ export async function createConnectAccount(email: string) {
 
 /** Generate onboarding link for organizer */
 export async function createAccountLink(accountId: string, returnUrl: string, refreshUrl: string) {
-  if (!process.env.STRIPE_SECRET_KEY) {
-    throw new Error("Missing STRIPE_SECRET_KEY");
-  }
-  return stripe.accountLinks.create({
+  return getStripe().accountLinks.create({
     account: accountId,
     return_url: returnUrl,
     refresh_url: refreshUrl,
@@ -72,10 +86,7 @@ export async function transferToOrganizer(
   destinationAccountId: string,
   metadata: Record<string, string> = {}
 ) {
-  if (!process.env.STRIPE_SECRET_KEY) {
-    throw new Error("Missing STRIPE_SECRET_KEY");
-  }
-  return stripe.transfers.create({
+  return getStripe().transfers.create({
     amount,
     currency: STRIPE_CURRENCY,
     destination: destinationAccountId,
@@ -85,10 +96,7 @@ export async function transferToOrganizer(
 
 /** Process a refund */
 export async function createRefund(chargeId: string, amount?: number) {
-  if (!process.env.STRIPE_SECRET_KEY) {
-    throw new Error("Missing STRIPE_SECRET_KEY");
-  }
-  return stripe.refunds.create({
+  return getStripe().refunds.create({
     charge: chargeId,
     ...(amount ? { amount } : {}),
   });
@@ -102,7 +110,7 @@ export function constructWebhookEvent(
   if (!process.env.STRIPE_WEBHOOK_SECRET) {
     throw new Error("Missing STRIPE_WEBHOOK_SECRET");
   }
-  return stripe.webhooks.constructEvent(
+  return getStripe().webhooks.constructEvent(
     payload,
     signature,
     process.env.STRIPE_WEBHOOK_SECRET

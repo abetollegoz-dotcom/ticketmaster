@@ -80,7 +80,7 @@ export default async function EventsPage({ searchParams }: PageProps) {
             ) : (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-                  {events.map((event, i) => (
+                  {events.map((event: any, i: number) => (
                     <EventCardComponent key={event.id} event={event as never} priority={i < 6} />
                   ))}
                 </div>

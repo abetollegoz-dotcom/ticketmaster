@@ -51,7 +51,7 @@ async function handlePaymentSuccess(stripeIntentId: string) {
   if (!payment || payment.status === "COMPLETED") return;
 
   // Update payment + order
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: any) => {
     await tx.payment.update({ where: { id: payment.id }, data: { status: "COMPLETED" } });
     await tx.order.update({ where: { id: payment.orderId }, data: { status: "CONFIRMED" } });
 
@@ -126,7 +126,7 @@ async function handlePaymentSuccess(stripeIntentId: string) {
       eventTitle: firstItem?.event?.title || "Your Event",
       eventDate: firstItem?.eventDate?.startDate?.toLocaleDateString() || "",
       total: `$${Number(payment.order.total).toFixed(2)}`,
-      ticketCount: payment.order.items.reduce((s, i) => s + i.quantity, 0),
+      ticketCount: payment.order.items.reduce((s: number, i: any) => s + i.quantity, 0),
       ticketsUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/tickets`,
     });
   }
@@ -139,7 +139,7 @@ async function handlePaymentFailed(stripeIntentId: string) {
   });
   if (!payment) return;
 
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: any) => {
     await tx.payment.update({ where: { id: payment.id }, data: { status: "FAILED" } });
     await tx.order.update({ where: { id: payment.orderId }, data: { status: "CANCELLED" } });
     // Release reserved stock
