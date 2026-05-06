@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Ticket, Mail, Lock, User, Eye, EyeOff, ArrowRight, Chrome, Check } from "lucide-react";
+import { Ticket, Mail, Lock, User, Eye, EyeOff, ArrowRight, ShieldCheck, Check } from "lucide-react";
 import { toast } from "@/components/ui/toaster";
 
 const PERKS = ["Free to join", "Instant digital tickets", "Secure QR codes", "24/7 support"];
@@ -70,7 +70,7 @@ export default function RegisterPage() {
             <h2 style={{ fontFamily: "var(--font-display)" }} className="text-xl font-bold mb-6 hidden md:block">Create your account</h2>
 
             <button onClick={() => signIn("google", { callbackUrl: "/dashboard" })} className="btn-ghost w-full mb-5 py-3 gap-3">
-              <Chrome className="w-5 h-5" /> Continue with Google
+              <ShieldCheck className="w-5 h-5" /> Continue with Google
             </button>
             <div className="flex items-center gap-4 mb-5">
               <div className="flex-1 h-px" style={{ background: "var(--bg-border)" }} />

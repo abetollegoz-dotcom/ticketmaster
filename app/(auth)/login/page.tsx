@@ -4,7 +4,7 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Ticket, Mail, Lock, Eye, EyeOff, ArrowRight, Chrome } from "lucide-react";
+import { Ticket, Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck } from "lucide-react";
 import { toast } from "@/components/ui/toaster";
 
 export default function LoginPage() {
@@ -56,7 +56,7 @@ export default function LoginPage() {
         <div className="card p-8">
           {/* Google */}
           <button onClick={handleGoogle} disabled={googleLoading} className="btn-ghost w-full mb-6 py-3 gap-3">
-            <Chrome className="w-5 h-5" />
+            <ShieldCheck className="w-5 h-5" />
             {googleLoading ? "Connecting…" : "Continue with Google"}
           </button>
 
