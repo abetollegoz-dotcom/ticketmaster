@@ -16,6 +16,8 @@ const QUICK_CATS = ["Concerts", "Sports", "Comedy", "Theatre", "Festivals", "Foo
 
 export function HomeHero() {
   const router = useRouter();
+  const [query, setQuery] = useState("");
+  const [bgIndex] = useState(0);
   const [isFocused, setIsFocused] = useState(false);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const placeholders = ["concerts", "sports", "comedy", "theatre", "festivals", "venues"];
