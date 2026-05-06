@@ -3,14 +3,16 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import EventEditForm from "@/app/organizer/events/[id]/edit/event-edit-form";
 
-export default async function AdminEventEditPage({ params }: { params: { id: string } }) {
+export default async function AdminEventEditPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session?.user || (session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN")) {
     redirect("/login");
   }
 
+  const { id } = await params;
+
   const event = await prisma.event.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       dates: true,
       ticketTypes: true,

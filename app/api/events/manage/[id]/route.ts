@@ -5,13 +5,13 @@ import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiError } from "@/lib/utils";
 import { auth } from "@/lib/auth";
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session?.user || (session.user.role !== "ORGANIZER" && session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN")) {
     return apiError("Unauthorized", 403);
   }
 
-  const { id } = params;
+  const { id } = await params;
   const event = await prisma.event.findUnique({
     where: { id },
     include: { organizer: true },
@@ -82,13 +82,13 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   return apiSuccess(updatedEvent);
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session?.user || (session.user.role !== "ORGANIZER" && session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN")) {
     return apiError("Unauthorized", 403);
   }
 
-  const { id } = params;
+  const { id } = await params;
   const event = await prisma.event.findUnique({
     where: { id },
     include: { _count: { select: { orderItems: true } } },

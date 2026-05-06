@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import EventEditForm from "./event-edit-form";
 
-export default async function OrganizerEventEditPage({ params }: { params: { id: string } }) {
+export default async function OrganizerEventEditPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session?.user || session.user.role !== "ORGANIZER") {
     redirect("/login");
@@ -12,8 +12,10 @@ export default async function OrganizerEventEditPage({ params }: { params: { id:
   const profile = await prisma.organizerProfile.findUnique({ where: { userId: session.user.id } });
   if (!profile) redirect("/organizer");
 
+  const { id } = await params;
+
   const event = await prisma.event.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       dates: true,
       ticketTypes: true,
