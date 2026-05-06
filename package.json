@@ -35,9 +35,12 @@
     "@stripe/stripe-js": "^9.4.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^20.0.0",
     "@types/nodemailer": "^8.0.0",
     "@types/pdfkit": "^0.17.6",
     "@types/qrcode": "^1.5.6",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "@types/uuid": "^10.0.0",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
@@ -61,18 +64,15 @@
     "sharp": "^0.34.5",
     "stripe": "^22.1.0",
     "tailwind-merge": "^3.5.0",
+    "tailwindcss": "^4.0.0",
+    "@tailwindcss/postcss": "^4.0.0",
+    "typescript": "^5.0.0",
     "uuid": "^14.0.0",
     "zod": "^4.4.3",
-    "zustand": "^5.0.13",
-    "tailwindcss": "^4.0.0",
-    "@tailwindcss/postcss": "^4.0.0"
+    "zustand": "^5.0.13"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
     "eslint": "^9.0.0",
-    "eslint-config-next": "16.2.4",
-    "typescript": "^5.0.0"
+    "eslint-config-next": "16.2.4"
   }
 }
