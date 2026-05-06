@@ -116,7 +116,7 @@ export default function RegisterPage() {
             </p>
             <p className="text-center text-sm mt-4" style={{ color: "var(--text-muted)" }}>
               Already have an account?{" "}
-              <Link href="/auth/login" className="text-indigo-400 font-semibold hover:text-indigo-300">Sign in</Link>
+              <Link href="/login" className="text-indigo-400 font-semibold hover:text-indigo-300">Sign in</Link>
             </p>
           </div>
         </motion.div>

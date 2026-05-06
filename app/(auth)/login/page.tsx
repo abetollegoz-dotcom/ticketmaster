@@ -78,7 +78,7 @@ export default function LoginPage() {
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-sm font-medium" htmlFor="password">Password</label>
-                <Link href="/auth/forgot-password" className="text-xs hover:text-indigo-400 transition-colors" style={{ color: "var(--text-muted)" }}>Forgot password?</Link>
+                <Link href="#" className="text-xs hover:text-indigo-400 transition-colors" style={{ color: "var(--text-muted)" }}>Forgot password?</Link>
               </div>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5" style={{ color: "var(--text-muted)" }} />
@@ -96,7 +96,7 @@ export default function LoginPage() {
 
           <p className="text-center text-sm mt-6" style={{ color: "var(--text-muted)" }}>
             Don&apos;t have an account?{" "}
-            <Link href="/auth/register" className="text-indigo-400 font-semibold hover:text-indigo-300 transition-colors">Create one free</Link>
+            <Link href="/register" className="text-indigo-400 font-semibold hover:text-indigo-300 transition-colors">Create one free</Link>
           </p>
         </div>
       </motion.div>
