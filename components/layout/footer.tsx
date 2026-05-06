@@ -15,12 +15,6 @@ const FOOTER_LINKS = {
     { label: "Careers", href: "/careers" },
     { label: "Press", href: "/press" },
   ],
-  Organizers: [
-    { label: "Sell Tickets", href: "/organizer/register" },
-    { label: "Organizer Portal", href: "/organizer" },
-    { label: "Pricing", href: "/pricing" },
-    { label: "API Docs", href: "/docs" },
-  ],
   Support: [
     { label: "Help Center", href: "/help" },
     { label: "Contact Us", href: "/contact" },
@@ -85,7 +79,7 @@ export function Footer() {
               </span>
             </Link>
             <p style={{ color: "var(--text-muted)" }} className="text-sm leading-relaxed mb-6">
-              The world&apos;s most trusted event ticketing marketplace. Buy, sell, and experience events worldwide.
+              The world&apos;s most trusted event ticketing marketplace. Buy and experience events worldwide.
             </p>
             <div className="flex gap-2">
               {SOCIAL.map(({ icon: Icon, href, label }) => (
