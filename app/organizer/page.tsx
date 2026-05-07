@@ -29,6 +29,7 @@ export default function OrganizerDashboard() {
   }, []);
 
   if (loading) return <div className="container py-20 text-center">Loading dashboard...</div>;
+  if (!data) return <div className="container py-20 text-center">Error loading dashboard data. Please check your internet or try again.</div>;
 
   const { stats, events } = data;
 
