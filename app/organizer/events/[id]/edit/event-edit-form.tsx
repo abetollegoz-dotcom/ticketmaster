@@ -35,13 +35,13 @@ export default function EventEditForm({ initialData }: EventEditFormProps) {
     postponeReason: "",
   });
 
-  const [dates, setDates] = useState(initialData.dates.map(d => ({
+  const [dates, setDates] = useState((initialData.dates as any[] || []).map((d: any) => ({
     ...d,
     startDate: d.startDate ? new Date(d.startDate).toISOString().slice(0, 16) : "",
     endDate: d.endDate ? new Date(d.endDate).toISOString().slice(0, 16) : "",
   })));
 
-  const [ticketTypes, setTicketTypes] = useState(initialData.ticketTypes);
+  const [ticketTypes, setTicketTypes] = useState(initialData.ticketTypes as any[] || []);
 
   const isPostponing = formData.status === "POSTPONED";
 
