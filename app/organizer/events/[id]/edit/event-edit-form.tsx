@@ -5,31 +5,23 @@ import { Calendar, Clock, Plus, Trash2, Save, AlertTriangle, ChevronRight, Layou
 import { toast } from "@/components/ui/toaster";
 import { format } from "date-fns";
 
+interface EventDate {
+  id?: string;
+  startDate: string | Date;
+  endDate: string | Date;
+}
+
 interface TicketType {
   id?: string;
   name: string;
   category: string;
-  price: number;
-  originalPrice?: number | null;
+  price: number | any; // Handle Decimal/Float
+  originalPrice?: number | any | null;
   quantity: number;
 }
 
-interface EventDate {
-  id?: string;
-  startDate: string;
-  endDate: string;
-}
-
 interface EventEditFormProps {
-  initialData: {
-    id: string;
-    title: string;
-    description: string;
-    status: string;
-    dates: EventDate[];
-    ticketTypes: TicketType[];
-    fallbackProvider?: string | null;
-  };
+  initialData: any;
 }
 
 export default function EventEditForm({ initialData }: EventEditFormProps) {
