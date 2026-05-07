@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Calendar, Clock, Plus, Trash2, Save, AlertTriangle, ChevronRight, Layout, Ticket as TicketIcon } from "lucide-react";
 import { toast } from "@/components/ui/toaster";
 import { format } from "date-fns";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface EventDate {
   id?: string;
