@@ -318,6 +318,19 @@ export default function EventEditForm({ initialData }: { initialData: any }) {
                   />
                 </div>
                 <div>
+                  <label className="block text-xs font-medium text-muted mb-1.5 uppercase tracking-wider">Type</label>
+                  <select
+                    className="input w-full"
+                    value={ticket.category || "GENERAL"}
+                    onChange={(e) => updateTicket(index, "category", e.target.value)}
+                  >
+                    <option value="GENERAL">General</option>
+                    <option value="VIP">VIP</option>
+                    <option value="EARLY_BIRD">Early Bird</option>
+                    <option value="BACKSTAGE">Backstage</option>
+                  </select>
+                </div>
+                <div>
                   <label className="block text-xs font-medium text-muted mb-1.5 uppercase tracking-wider">Price ($)</label>
                   <input
                     type="number"

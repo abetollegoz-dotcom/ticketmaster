@@ -42,14 +42,20 @@ async function runDynamicPricing() {
         multiplier *= rule.priceMultiplier;
         multiplier = Math.min(multiplier, rule.maxPriceMultiplier);
 
-        const newPrice = Number(tt.price) * multiplier;
+        // Use originalPrice as the base, or initialize it if null
+        const basePrice = tt.originalPrice ? Number(tt.originalPrice) : Number(tt.price);
+        if (!tt.originalPrice) {
+           await prisma.ticketType.update({ where: { id: tt.id }, data: { originalPrice: tt.price } });
+        }
+
+        const newPrice = Number((basePrice * multiplier).toFixed(2));
         
         if (Math.abs(newPrice - Number(tt.price)) > 0.01) {
           await prisma.ticketType.update({
             where: { id: tt.id },
             data: { price: newPrice, updatedAt: new Date() }
           });
-          console.log(`[Pricing Cron] Updated ${tt.name} price: ${tt.price} -> ${newPrice.toFixed(2)}`);
+          console.log(`[Pricing Cron] Updated ${tt.name} price: ${tt.price} -> ${newPrice}`);
         }
       }
     }

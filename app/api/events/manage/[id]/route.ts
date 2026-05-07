@@ -62,6 +62,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
           where: { id: tt.id },
           data: {
             name: tt.name,
+            category: tt.category || "GENERAL",
             price: tt.price,
             originalPrice: tt.originalPrice ?? null,
             quantity: tt.quantity,
@@ -72,6 +73,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
           data: {
             eventId: id,
             name: tt.name,
+            category: tt.category || "GENERAL",
             price: tt.price,
             originalPrice: tt.originalPrice ?? null,
             quantity: tt.quantity,
