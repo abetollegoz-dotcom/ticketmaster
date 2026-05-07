@@ -11,15 +11,15 @@ export default async function OrganizerEventEditPage({ params }: { params: Promi
     redirect(`/login?callbackUrl=/organizer/events/${id}/edit`);
   }
 
-  // For organizers, ensure they own the event
-  if (session.user.role === "ORGANIZER") {
-    const profile = await prisma.organizerProfile.findUnique({ where: { userId: session.user.id } });
-    if (!profile) redirect("/organizer");
-
-    const event = await prisma.event.findUnique({ where: { id }, select: { organizerId: true } });
-    if (!event || event.organizerId !== profile.id) {
-      redirect("/organizer");
-    }
+  // Ensure profile exists (needed for ownership check)
+  let profile = await prisma.organizerProfile.findUnique({ where: { userId: session.user.id } });
+  
+  if (!profile) {
+    const orgName = session.user.name || "My Organization";
+    const slug = `${orgName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now().toString().slice(-4)}`;
+    profile = await prisma.organizerProfile.create({
+      data: { userId: session.user.id, organizationName: orgName, slug, isApproved: true }
+    });
   }
 
   const event = await prisma.event.findUnique({
@@ -32,6 +32,12 @@ export default async function OrganizerEventEditPage({ params }: { params: Promi
   });
 
   if (!event) {
+    redirect("/organizer");
+  }
+
+  // Authorization: Admins can edit anything. Organizers only their own.
+  const isAdmin = session.user.role === "ADMIN" || session.user.role === "SUPER_ADMIN";
+  if (!isAdmin && event.organizerId !== profile.id) {
     redirect("/organizer");
   }
 

@@ -6,13 +6,19 @@ import SettingsForm from "./settings-form";
 
 export default async function OrganizerSettingsPage() {
   const session = await auth();
-  if (!session?.user) redirect("/login");
+  if (!session?.user) redirect("/login?callbackUrl=/organizer/settings");
 
-  const profile = await prisma.organizerProfile.findUnique({
+  let profile = await prisma.organizerProfile.findUnique({
     where: { userId: session.user.id },
   });
 
-  if (!profile) redirect("/organizer");
+  if (!profile) {
+    const orgName = session.user.name || "My Organization";
+    const slug = `${orgName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now().toString().slice(-4)}`;
+    profile = await prisma.organizerProfile.create({
+      data: { userId: session.user.id, organizationName: orgName, slug, isApproved: true }
+    });
+  }
 
   return (
     <div className="container py-12 max-w-4xl">
