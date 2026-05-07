@@ -61,12 +61,41 @@ export default function AdminDashboard() {
           <p className="text-secondary">Platform-wide overview and marketplace control.</p>
         </div>
         <div className="flex gap-2">
-          <button className="btn-ghost py-2.5 px-5 text-sm gap-2">
-            <BarChart3 className="w-4 h-4" /> Reports
-          </button>
-          <button className="btn-primary py-2.5 px-5 text-sm gap-2 shadow-lg shadow-indigo-500/20">
-            <ShieldCheck className="w-4 h-4" /> Security Logs
-          </button>
+          <Link href="/admin/orders" className="btn py-2.5 px-5 text-sm gap-2 border-amber-500/30 text-amber-500 hover:bg-amber-500/10">
+            <Ticket className="w-4 h-4" /> Manual Payment Queue
+          </Link>
+          <Link href="/admin/events" className="btn-primary py-2.5 px-5 text-sm gap-2 shadow-lg shadow-indigo-500/20">
+            <Globe className="w-4 h-4" /> Global Event Control
+          </Link>
+        </div>
+      </div>
+
+      <div className="card p-6 mb-12 border border-indigo-500/20 bg-indigo-500/5">
+        <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+          <ShieldCheck className="w-5 h-5 text-indigo-400" /> Marketplace Management
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Link href="/admin/events?filter=PUBLISHED" className="flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors group">
+            <div>
+              <p className="font-bold text-sm">Postpone/Cancel Events</p>
+              <p className="text-[10px] text-muted">Manage event lifecycles globally</p>
+            </div>
+            <ArrowUpRight className="w-4 h-4 text-muted group-hover:text-indigo-400 transition-colors" />
+          </Link>
+          <Link href="/admin/orders?status=PENDING" className="flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors group">
+            <div>
+              <p className="font-bold text-sm">Approve Manual Tickets</p>
+              <p className="text-[10px] text-muted">Verify payments and activate tickets</p>
+            </div>
+            <ArrowUpRight className="w-4 h-4 text-muted group-hover:text-indigo-400 transition-colors" />
+          </Link>
+          <Link href="/admin/events" className="flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors group">
+            <div>
+              <p className="font-bold text-sm">Adjust Global Pricing</p>
+              <p className="text-[10px] text-muted">Override event prices and discounts</p>
+            </div>
+            <ArrowUpRight className="w-4 h-4 text-muted group-hover:text-indigo-400 transition-colors" />
+          </Link>
         </div>
       </div>
 
@@ -153,7 +182,7 @@ export default function AdminDashboard() {
               )}
             </div>
             <div className="p-4 border-t border-white/5 text-center">
-              <button className="text-xs text-indigo-400 font-semibold hover:underline">View all moderation tasks</button>
+              <Link href="/admin/events" className="text-xs text-indigo-400 font-semibold hover:underline">View and Manage All Events</Link>
             </div>
           </div>
         </div>
