@@ -1,55 +1,70 @@
-"use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Calendar, Clock, Plus, Trash2, Save, AlertTriangle, ChevronRight, Layout, Ticket as TicketIcon } from "lucide-react";
 import { toast } from "@/components/ui/toaster";
-import { Trash2, Plus, ChevronDown, Calendar, CreditCard, AlertTriangle } from "lucide-react";
-import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { format } from "date-fns";
 
-const PROVIDERS = [
-  { value: "", label: "None (Use Default)" },
-  { value: "PAYPAL", label: "PayPal" },
-  { value: "MOLLIE", label: "Mollie" },
-  { value: "STRIPE", label: "Stripe (alternate account)" },
-];
+interface TicketType {
+  id?: string;
+  name: string;
+  category: string;
+  price: number;
+  originalPrice?: number | null;
+  quantity: number;
+}
 
-const STATUS_OPTIONS = [
-  { value: "DRAFT", label: "Draft" },
-  { value: "PUBLISHED", label: "Published" },
-  { value: "POSTPONED", label: "Postponed" },
-  { value: "SUSPENDED", label: "Suspended" },
-  { value: "CANCELLED", label: "Cancelled" },
-];
+interface EventDate {
+  id?: string;
+  startDate: string;
+  endDate: string;
+}
 
-export default function EventEditForm({ initialData }: { initialData: any }) {
+interface EventEditFormProps {
+  initialData: {
+    id: string;
+    title: string;
+    description: string;
+    status: string;
+    dates: EventDate[];
+    ticketTypes: TicketType[];
+    fallbackProvider?: string | null;
+  };
+}
+
+export default function EventEditForm({ initialData }: EventEditFormProps) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: initialData.title,
     description: initialData.description,
     status: initialData.status,
     fallbackProvider: initialData.fallbackProvider || "",
+    postponeReason: "",
   });
 
-  const [dates, setDates] = useState<any[]>(
-    initialData.dates.map((d: any) => ({
-      id: d.id,
-      startDate: new Date(d.startDate).toISOString().slice(0, 16),
-      endDate: new Date(d.endDate).toISOString().slice(0, 16),
-    }))
-  );
+  const [dates, setDates] = useState(initialData.dates.map(d => ({
+    ...d,
+    startDate: d.startDate ? new Date(d.startDate).toISOString().slice(0, 16) : "",
+    endDate: d.endDate ? new Date(d.endDate).toISOString().slice(0, 16) : "",
+  })));
 
-  const [ticketTypes, setTicketTypes] = useState<any[]>(initialData.ticketTypes);
-  const [postponeReason, setPostponeReason] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [ticketTypes, setTicketTypes] = useState(initialData.ticketTypes);
 
-  // Modal state
-  const [cancelModal, setCancelModal] = useState(false);
-  const [deleteModal, setDeleteModal] = useState(false);
-  const [postponeModal, setPostponeModal] = useState(false);
-  const [actionLoading, setActionLoading] = useState(false);
-
-  const router = useRouter();
   const isPostponing = formData.status === "POSTPONED";
 
-  const handleSave = async (e: React.FormEvent) => {
+  const updateDate = (index: number, field: string, value: string) => {
+    const newDates = [...dates];
+    newDates[index] = { ...newDates[index], [field]: value };
+    setDates(newDates);
+  };
+
+  const updateTicket = (index: number, field: string, value: any) => {
+    const newTickets = [...ticketTypes];
+    newTickets[index] = { ...newTickets[index], [field]: value };
+    setTicketTypes(newTickets);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
@@ -59,110 +74,37 @@ export default function EventEditForm({ initialData }: { initialData: any }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
-          fallbackProvider: formData.fallbackProvider || null,
           dates,
           ticketTypes,
-          postponeReason: isPostponing ? postponeReason : undefined,
         }),
       });
 
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to update event");
-      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Update failed");
 
       toast.success("Event updated successfully!");
+      router.push("/organizer/events");
       router.refresh();
-    } catch (error: any) {
-      toast.error("Update failed", error.message);
+    } catch (err: any) {
+      toast.error("Failed to update event", err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCancel = async () => {
-    setActionLoading(true);
-    try {
-      const res = await fetch(`/api/events/manage/${initialData.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "CANCELLED", dates, ticketTypes }),
-      });
-      if (!res.ok) throw new Error("Failed to cancel event");
-      toast.success("Event cancelled.");
-      setCancelModal(false);
-      router.push("/organizer");
-    } catch (error: any) {
-      toast.error("Cancel failed", error.message);
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    setActionLoading(true);
-    try {
-      const res = await fetch(`/api/events/manage/${initialData.id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete event");
-      toast.success("Event removed successfully.");
-      setDeleteModal(false);
-      router.push("/organizer");
-    } catch (error: any) {
-      toast.error("Delete failed", error.message);
-      setActionLoading(false);
-    }
-  };
-
-  const updateTicket = (index: number, field: string, value: any) => {
-    const newTickets = [...ticketTypes];
-    newTickets[index] = { ...newTickets[index], [field]: value };
-    setTicketTypes(newTickets);
-  };
-
-  const updateDate = (index: number, field: string, value: string) => {
-    const newDates = [...dates];
-    newDates[index] = { ...newDates[index], [field]: value };
-    setDates(newDates);
-  };
-
   return (
-    <>
-      {/* Cancel Confirmation */}
-      <ConfirmModal
-        open={cancelModal}
-        onClose={() => setCancelModal(false)}
-        onConfirm={handleCancel}
-        title="Cancel Event"
-        description="Are you sure you want to cancel this event? Ticket holders will be notified. This is a soft cancellation — tickets remain in the system but are flagged for manual refund."
-        confirmLabel="Yes, Cancel Event"
-        variant="danger"
-        loading={actionLoading}
-      />
-
-      {/* Delete Confirmation */}
-      <ConfirmModal
-        open={deleteModal}
-        onClose={() => setDeleteModal(false)}
-        onConfirm={handleDelete}
-        title="Delete Event"
-        description="Events with existing orders will be cancelled instead of deleted. Events with no orders will be permanently removed. This cannot be undone."
-        confirmLabel="Delete / Cancel"
-        variant="danger"
-        loading={actionLoading}
-      />
-
-      <form onSubmit={handleSave} className="space-y-8">
+    <form onSubmit={handleSubmit} className="space-y-8 pb-20">
+      <div className="flex flex-col gap-6">
         {/* Basic Info */}
         <div className="card p-6">
-          <h2 className="text-xl font-bold mb-5 flex items-center gap-2">
+          <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
             <span className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400 text-sm font-bold">1</span>
-            Event Details
+            General Information
           </h2>
-          <div className="space-y-5">
+          <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1.5">Title</label>
+              <label className="block text-sm font-medium mb-1.5 text-muted">Event Title</label>
               <input
-                type="text"
                 required
                 className="input w-full"
                 value={formData.title}
@@ -170,7 +112,7 @@ export default function EventEditForm({ initialData }: { initialData: any }) {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1.5">Description</label>
+              <label className="block text-sm font-medium mb-1.5 text-muted">Description</label>
               <textarea
                 required
                 rows={4}
@@ -179,64 +121,49 @@ export default function EventEditForm({ initialData }: { initialData: any }) {
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1.5">Status</label>
-                <div className="relative">
-                  <select
-                    className="input w-full appearance-none pr-10"
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  >
-                    {STATUS_OPTIONS.map(opt => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
-                </div>
+                <label className="block text-sm font-medium mb-1.5 text-muted">Status</label>
+                <select
+                  className="input w-full"
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                >
+                  <option value="DRAFT">Draft</option>
+                  <option value="PUBLISHED">Published</option>
+                  <option value="POSTPONED">Postponed</option>
+                  <option value="CANCELLED">Cancelled</option>
+                </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1.5 flex items-center gap-1.5">
-                  <CreditCard className="w-4 h-4 text-indigo-400" /> Fallback Payment Provider
-                </label>
-                <div className="relative">
-                  <select
-                    className="input w-full appearance-none pr-10"
-                    value={formData.fallbackProvider}
-                    onChange={(e) => setFormData({ ...formData, fallbackProvider: e.target.value })}
-                  >
-                    {PROVIDERS.map(p => (
-                      <option key={p.value} value={p.value}>{p.label}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
-                </div>
-                <p className="text-[11px] text-muted mt-1.5">Used if the primary payment processor fails at checkout.</p>
+                <label className="block text-sm font-medium mb-1.5 text-muted">Payment Fallback Provider</label>
+                <select
+                  className="input w-full"
+                  value={formData.fallbackProvider}
+                  onChange={(e) => setFormData({ ...formData, fallbackProvider: e.target.value })}
+                >
+                  <option value="">None (Standard Checkout)</option>
+                  <option value="STRIPE">Stripe</option>
+                  <option value="PAYPAL">PayPal</option>
+                  <option value="MPESA">M-Pesa</option>
+                  <option value="DIRECT_BANK">Direct Bank Transfer</option>
+                </select>
               </div>
             </div>
+
+            {isPostponing && (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}>
+                <label className="block text-sm font-medium mb-1.5 text-orange-400">Reason for Postponing</label>
+                <textarea
+                  className="input w-full border-orange-500/30"
+                  placeholder="e.g., Unforeseen logistics issues..."
+                  value={formData.postponeReason}
+                  onChange={(e) => setFormData({ ...formData, postponeReason: e.target.value })}
+                />
+              </motion.div>
+            )}
           </div>
         </div>
-
-        {/* Postpone reason — shown when status = POSTPONED */}
-        {isPostponing && (
-          <div className="card p-6 border border-orange-500/30 bg-orange-500/5">
-            <div className="flex items-start gap-3 mb-4">
-              <AlertTriangle className="w-5 h-5 text-orange-400 mt-0.5 shrink-0" />
-              <div>
-                <h3 className="font-bold text-orange-400">Postponing Event</h3>
-                <p className="text-sm text-secondary mt-1">New dates are required below. Ticket holders will be notified of the change.</p>
-              </div>
-            </div>
-            <label className="block text-sm font-medium mb-1.5">Reason for Postponement</label>
-            <textarea
-              rows={2}
-              className="input w-full resize-none"
-              placeholder="e.g. Venue unavailability, artist scheduling conflict..."
-              value={postponeReason}
-              onChange={(e) => setPostponeReason(e.target.value)}
-            />
-          </div>
-        )}
 
         {/* Dates */}
         <div className="card p-6">
@@ -256,161 +183,144 @@ export default function EventEditForm({ initialData }: { initialData: any }) {
           <div className="space-y-4">
             {dates.map((date, index) => (
               <div key={index} className="flex gap-4 items-end bg-white/5 p-4 rounded-xl">
-                <div className="flex-1">
-                  <label className="block text-sm font-medium mb-1.5">Start Date & Time</label>
-                  <input
-                    type="datetime-local"
-                    required
-                    className="input w-full"
-                    value={date.startDate}
-                    onChange={(e) => updateDate(index, "startDate", e.target.value)}
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
+                  <div className="relative">
+                    <label className="block text-sm font-medium mb-1.5">Start Date & Time</label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
+                      <input
+                        type="datetime-local"
+                        required
+                        className="input w-full pl-10 cursor-pointer"
+                        value={date.startDate}
+                        onClick={(e) => e.currentTarget.showPicker()}
+                        onChange={(e) => updateDate(index, "startDate", e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div className="relative">
+                    <label className="block text-sm font-medium mb-1.5">End Date & Time</label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
+                      <input
+                        type="datetime-local"
+                        required
+                        className="input w-full pl-10 cursor-pointer"
+                        value={date.endDate}
+                        onClick={(e) => e.currentTarget.showPicker()}
+                        onChange={(e) => updateDate(index, "endDate", e.target.value)}
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <label className="block text-sm font-medium mb-1.5">End Date & Time</label>
-                  <input
-                    type="datetime-local"
-                    required
-                    className="input w-full"
-                    value={date.endDate}
-                    onChange={(e) => updateDate(index, "endDate", e.target.value)}
-                  />
-                </div>
-                <button
-                  type="button"
-                  className="p-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-colors"
-                  onClick={() => setDates(dates.filter((_, i) => i !== index))}
-                  disabled={dates.length === 1}
-                >
-                  <Trash2 className="w-5 h-5" />
-                </button>
+                {dates.length > 1 && (
+                  <button
+                    type="button"
+                    className="p-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-colors"
+                    onClick={() => setDates(dates.filter((_, i) => i !== index))}
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                )}
               </div>
             ))}
           </div>
         </div>
 
-        {/* Ticket Pricing */}
+        {/* Tickets */}
         <div className="card p-6">
           <div className="flex justify-between items-center mb-5">
             <h2 className="text-xl font-bold flex items-center gap-2">
               <span className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400 text-sm font-bold">3</span>
-              Ticket Types & Pricing
+              Ticket Categories
             </h2>
             <button
               type="button"
-              className="text-emerald-400 text-sm flex items-center gap-1 hover:text-emerald-300 transition-colors"
-              onClick={() => setTicketTypes([...ticketTypes, { name: "", price: 0, originalPrice: null, quantity: 100 }])}
+              className="text-indigo-400 text-sm flex items-center gap-1 hover:text-indigo-300 transition-colors"
+              onClick={() => setTicketTypes([...ticketTypes, { name: "", category: "GENERAL", price: 0, quantity: 100 }])}
             >
-              <Plus className="w-4 h-4" /> Add Ticket
+              <Plus className="w-4 h-4" /> Add Category
             </button>
           </div>
           <div className="space-y-4">
             {ticketTypes.map((ticket, index) => (
-              <div key={index} className="grid grid-cols-2 sm:grid-cols-4 gap-3 items-end bg-white/5 p-4 rounded-xl">
-                <div className="col-span-2 sm:col-span-1">
-                  <label className="block text-xs font-medium text-muted mb-1.5 uppercase tracking-wider">Name</label>
-                  <input
-                    type="text"
-                    required
-                    className="input w-full"
-                    value={ticket.name}
-                    onChange={(e) => updateTicket(index, "name", e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-muted mb-1.5 uppercase tracking-wider">Type</label>
-                  <select
-                    className="input w-full"
-                    value={ticket.category || "GENERAL"}
-                    onChange={(e) => updateTicket(index, "category", e.target.value)}
-                  >
-                    <option value="GENERAL">General</option>
-                    <option value="VIP">VIP</option>
-                    <option value="EARLY_BIRD">Early Bird</option>
-                    <option value="BACKSTAGE">Backstage</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-muted mb-1.5 uppercase tracking-wider">Price ($)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    required
-                    className="input w-full"
-                    value={ticket.price}
-                    onChange={(e) => updateTicket(index, "price", parseFloat(e.target.value))}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-muted mb-1.5 uppercase tracking-wider">Original ($)
-                    <span className="ml-1 text-muted font-normal normal-case">strike-through</span>
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    className="input w-full"
-                    placeholder="—"
-                    value={ticket.originalPrice ?? ""}
-                    onChange={(e) => updateTicket(index, "originalPrice", e.target.value ? parseFloat(e.target.value) : null)}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-muted mb-1.5 uppercase tracking-wider">Quantity</label>
-                  <div className="flex gap-2">
+              <div key={index} className="bg-white/2 p-6 rounded-xl border border-white/5 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5 text-muted">Ticket Name</label>
+                    <input
+                      required
+                      placeholder="e.g. VIP Early Bird"
+                      className="input w-full"
+                      value={ticket.name}
+                      onChange={(e) => updateTicket(index, "name", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5 text-muted">Price</label>
                     <input
                       type="number"
-                      min="1"
+                      required
+                      className="input w-full"
+                      value={ticket.price}
+                      onChange={(e) => updateTicket(index, "price", parseFloat(e.target.value))}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5 text-muted">Original Price (Strike-through)</label>
+                    <input
+                      type="number"
+                      placeholder="Optional"
+                      className="input w-full"
+                      value={ticket.originalPrice || ""}
+                      onChange={(e) => updateTicket(index, "originalPrice", e.target.value ? parseFloat(e.target.value) : null)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5 text-muted">Quantity</label>
+                    <input
+                      type="number"
                       required
                       className="input w-full"
                       value={ticket.quantity}
                       onChange={(e) => updateTicket(index, "quantity", parseInt(e.target.value))}
                     />
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  {ticketTypes.length > 1 && (
                     <button
                       type="button"
-                      className="p-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-colors shrink-0"
+                      className="text-xs text-red-400 hover:underline flex items-center gap-1"
                       onClick={() => setTicketTypes(ticketTypes.filter((_, i) => i !== index))}
-                      disabled={ticketTypes.length === 1}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3.5 h-3.5" /> Remove category
                     </button>
-                  </div>
+                  )}
                 </div>
               </div>
             ))}
           </div>
         </div>
+      </div>
 
-        {/* Action Bar */}
-        <div className="flex flex-wrap justify-between items-center gap-3 border-t border-white/10 pt-6">
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setCancelModal(true)}
-              disabled={loading || actionLoading || formData.status === "CANCELLED"}
-              className="btn py-2.5 px-5 text-sm text-orange-400 border border-orange-500/30 hover:bg-orange-500/10 disabled:opacity-40 transition-colors"
-            >
-              Cancel Event
-            </button>
-            <button
-              type="button"
-              onClick={() => setDeleteModal(true)}
-              disabled={loading || actionLoading}
-              className="btn py-2.5 px-5 text-sm text-red-400 border border-red-500/30 hover:bg-red-500/10 disabled:opacity-40 transition-colors"
-            >
-              Delete Event
-            </button>
-          </div>
-          <button
-            type="submit"
-            disabled={loading || actionLoading}
-            className="btn-primary py-3 px-8 gap-2"
-          >
-            {loading ? "Saving…" : "Save Changes"}
-          </button>
-        </div>
-      </form>
-    </>
+      <div className="fixed bottom-8 right-8 flex items-center gap-4 z-50">
+        <button
+          type="button"
+          className="btn-ghost px-8 py-3 bg-bg-surface"
+          onClick={() => router.back()}
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          disabled={loading}
+          className="btn-primary px-10 py-3 shadow-xl shadow-indigo-500/20"
+        >
+          <Save className="w-5 h-5" />
+          {loading ? "Saving Changes..." : "Save Changes"}
+        </button>
+      </div>
+    </form>
   );
 }
