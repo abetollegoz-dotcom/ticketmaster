@@ -5,7 +5,10 @@ import { auth } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ORGANIZER") {
+  const isAdmin = session?.user?.role === "ADMIN" || session?.user?.role === "SUPER_ADMIN";
+  const isOrganizer = session?.user?.role === "ORGANIZER";
+
+  if (!session?.user || (!isAdmin && !isOrganizer)) {
     return apiError("Unauthorized", 403);
   }
 
@@ -13,7 +16,13 @@ export async function GET(req: NextRequest) {
     where: { userId: session.user.id },
   });
 
-  if (!profile) return apiError("Profile not found", 404);
+  if (!profile) {
+    // Return empty state instead of error
+    return apiSuccess({
+      stats: { totalRevenue: 0, totalTicketsSold: 0, activeEvents: 0, conversionRate: 0 },
+      events: []
+    });
+  }
 
   const [events, totalRevenue] = await Promise.all([
     prisma.event.findMany({
