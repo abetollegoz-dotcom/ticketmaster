@@ -171,6 +171,7 @@ export interface SearchFilters {
   minPrice?: number;
   maxPrice?: number;
   sortBy?: "date" | "price_asc" | "price_desc" | "popularity" | "trending";
+  sort?: "date" | "price_asc" | "price_desc" | "popularity" | "trending";
   page?: number;
   limit?: number;
 }

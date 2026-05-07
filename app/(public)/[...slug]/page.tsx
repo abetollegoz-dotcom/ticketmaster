@@ -1,7 +1,8 @@
 import { ShieldCheck, Info, FileText, HelpCircle, Mail } from "lucide-react";
 
-export default function ContentPage({ params }: { params: { slug: string[] } }) {
-  const slug = params.slug.join("/");
+export default async function ContentPage({ params }: { params: Promise<{ slug: string[] }> }) {
+  const { slug: slugArray } = await params;
+  const slug = slugArray.join("/");
   const title = slug.charAt(0).toUpperCase() + slug.slice(1).replace(/-/g, " ");
 
   return (

@@ -2,9 +2,10 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import EventEditForm from "@/app/organizer/events/[id]/edit/event-edit-form";
 
-export default async function AdminEventEditPage({ params }: { params: { id: string } }) {
+export default async function AdminEventEditPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const event = await prisma.event.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       dates: true,
       ticketTypes: true,

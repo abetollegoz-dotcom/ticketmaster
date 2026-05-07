@@ -31,7 +31,11 @@ export function HomeHero() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (query.trim()) router.push(`/search?q=${encodeURIComponent(query)}`);
+    if (query.trim()) {
+      router.push(`/search?q=${encodeURIComponent(query)}`);
+    } else {
+      router.push("/events");
+    }
   };
 
   return (

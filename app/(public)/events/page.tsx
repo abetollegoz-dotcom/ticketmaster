@@ -25,11 +25,11 @@ export default async function EventsPage({ searchParams }: PageProps) {
   if (sp.query) where.title = { contains: sp.query, mode: "insensitive" };
   if (sp.category) where.category = { slug: sp.category };
   if (sp.city) where.venue = { city: { contains: sp.city, mode: "insensitive" } };
-  if (sp.sortBy === "trending") where.isTrending = true;
+  if (sp.sort === "trending") where.isTrending = true;
 
   const orderBy: any =
-    sp.sortBy === "trending" ? { totalSales: "desc" } :
-    sp.sortBy === "price_asc" ? { title: "asc" } : // fallback for price_asc since we can't sort by nested min price easily
+    sp.sort === "trending" ? { totalSales: "desc" } :
+    sp.sort === "price_asc" ? { title: "asc" } : // fallback for price_asc since we can't sort by nested min price easily
     { createdAt: "desc" };
 
   const [events, total, categories] = await Promise.all([

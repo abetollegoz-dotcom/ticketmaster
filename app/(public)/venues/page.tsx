@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { MapPin, ArrowRight, Music, Mic, Ghost, Ticket } from "lucide-react";
 import Link from "next/link";
-import { motion } from "framer-motion";
 
 export default async function VenuesPage() {
   const venues = await prisma.venue.findMany({
