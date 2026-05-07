@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { OrganizerSidebar } from "@/components/layout/organizer-sidebar";
 
 export default async function OrganizerLayout({
   children,
@@ -12,5 +13,12 @@ export default async function OrganizerLayout({
     redirect("/");
   }
 
-  return <>{children}</>;
+  return (
+    <div className="flex min-h-screen bg-[#050510] text-white">
+      <OrganizerSidebar />
+      <main className="flex-1 overflow-y-auto">
+        {children}
+      </main>
+    </div>
+  );
 }

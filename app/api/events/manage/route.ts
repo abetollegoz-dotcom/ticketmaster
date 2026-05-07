@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { title, description, venueId, categoryId, dates, ticketTypes } = body;
+  const { title, description, venueId, categoryId, fallbackProvider, dates, ticketTypes } = body;
 
   if (!title || !description || !dates || dates.length === 0 || !ticketTypes || ticketTypes.length === 0) {
     return apiError("Missing required fields", 400);
@@ -41,6 +41,7 @@ export async function POST(req: NextRequest) {
       venueId,
       categoryId,
       organizerId,
+      fallbackProvider: fallbackProvider || null,
       status: "PUBLISHED",
       dates: {
         create: dates.map((d: any) => ({
@@ -51,7 +52,9 @@ export async function POST(req: NextRequest) {
       ticketTypes: {
         create: ticketTypes.map((t: any) => ({
           name: t.name,
+          category: t.category || "GENERAL",
           price: t.price,
+          originalPrice: t.originalPrice || null,
           quantity: t.quantity,
         })),
       },
