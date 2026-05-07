@@ -71,7 +71,7 @@ export default function MyTicketsPage() {
               </div>
               <div className="p-4 flex flex-col gap-3">
                 <div className="flex items-center gap-2 text-sm text-secondary">
-                  <Calendar className="w-4 h-4" /> {formatDateShort(item.eventDate.startDate)}
+                  <Calendar className="w-4 h-4" /> {item.eventDate ? formatDateShort(item.eventDate.startDate) : "TBD"}
                 </div>
                 <div className="flex justify-between items-center mt-2 pt-3 border-t border-white/5">
                   <span className="text-xs text-muted">Ticket #{ticket.ticketNumber}</span>

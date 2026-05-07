@@ -94,7 +94,7 @@ export default async function DashboardOverview() {
                       <h4 className="font-bold mb-2 line-clamp-1">{item.event.title}</h4>
                       <div className="flex items-center gap-3 text-xs text-secondary">
                         <Calendar className="w-3.5 h-3.5" />
-                        <span>{formatDateShort(item.eventDate.startDate)}</span>
+                        <span>{item.eventDate ? formatDateShort(item.eventDate.startDate) : "TBD"}</span>
                       </div>
                     </div>
                   </Link>
