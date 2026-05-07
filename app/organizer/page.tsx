@@ -16,22 +16,21 @@ interface Stats {
 }
 
 export default function OrganizerDashboard() {
-  const [stats, setStats] = useState<Stats>({
-    totalRevenue: 0,
-    totalTicketsSold: 0,
-    activeEvents: 0,
-    conversionRate: 0
-  });
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // In a real app, fetch from /api/organizer/stats
-    setStats({
-      totalRevenue: 12450.50,
-      totalTicketsSold: 482,
-      activeEvents: 3,
-      conversionRate: 12.5
-    });
+    fetch("/api/organizer/stats")
+      .then(res => res.json())
+      .then(json => {
+        setData(json.data);
+        setLoading(false);
+      });
   }, []);
+
+  if (loading) return <div className="container py-20 text-center">Loading dashboard...</div>;
+
+  const { stats, events } = data;
 
   const statCards = [
     { label: "Total Revenue", value: formatCurrency(stats.totalRevenue), icon: DollarSign, color: "text-emerald-400", bg: "bg-emerald-500/10" },
@@ -74,54 +73,62 @@ export default function OrganizerDashboard() {
         <div className="lg:col-span-2">
           <div className="card p-6">
             <div className="flex justify-between items-center mb-8">
-              <h2 className="text-xl font-bold">Recent Sales</h2>
-              <Link href="/organizer/sales" className="text-sm text-indigo-400 flex items-center gap-1 hover:underline">
+              <h2 className="text-xl font-bold">Your Events</h2>
+              <Link href="/organizer/events" className="text-sm text-indigo-400 flex items-center gap-1 hover:underline">
                 View all <ArrowUpRight className="w-4 h-4" />
               </Link>
             </div>
-            <div className="flex flex-col gap-4">
-              {[1, 2, 3, 4, 5].map((item) => (
-                <div key={item} className="flex items-center justify-between py-3 border-b border-white/5 last:border-0">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center font-bold text-xs">JD</div>
-                    <div>
-                      <p className="text-sm font-semibold">John Doe</p>
-                      <p className="text-xs text-muted">2 tickets • Tech Conference 2024</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold">$198.00</p>
-                    <p className="text-[10px] text-muted">2 hours ago</p>
-                  </div>
-                </div>
-              ))}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b border-white/5 text-muted uppercase text-[10px] font-bold tracking-wider">
+                    <th className="pb-4">Event</th>
+                    <th className="pb-4">Status</th>
+                    <th className="pb-4">Tickets</th>
+                    <th className="pb-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {events.length === 0 ? (
+                    <tr><td colSpan={4} className="py-8 text-center text-muted">No events created yet.</td></tr>
+                  ) : (
+                    events.map((event: any) => (
+                      <tr key={event.id} className="hover:bg-white/2 transition-colors">
+                        <td className="py-4 font-semibold">{event.name}</td>
+                        <td className="py-4">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            event.status === "PUBLISHED" ? "bg-emerald-500/10 text-emerald-400" :
+                            event.status === "DRAFT" ? "bg-white/10 text-muted" :
+                            "bg-amber-500/10 text-amber-400"
+                          }`}>
+                            {event.status}
+                          </span>
+                        </td>
+                        <td className="py-4 text-secondary">{event.sold} sold</td>
+                        <td className="py-4 text-right">
+                          <Link href={`/organizer/events/${event.id}/edit`} className="text-xs text-indigo-400 hover:underline">
+                            Edit
+                          </Link>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
 
         <div className="lg:col-span-1">
           <div className="card p-6">
-            <h2 className="text-xl font-bold mb-6">Top Events</h2>
-            <div className="flex flex-col gap-6">
-              {[
-                { id: "cm32abc", name: "Summer Music Fest", sold: 245, revenue: 12250 },
-                { id: "cm32def", name: "Tech Conference", sold: 182, revenue: 36400 },
-                { id: "cm32ghi", name: "Art Workshop", sold: 55, revenue: 2750 },
-              ].map((event, i) => (
-                <div key={i}>
-                  <div className="flex justify-between text-sm font-semibold mb-2 items-center">
-                    <span>{event.name}</span>
-                    <div className="flex items-center gap-3">
-                      <span>{formatCurrency(event.revenue)}</span>
-                      <Link href={`/organizer/events/${event.id}/edit`} className="text-[10px] bg-white/10 hover:bg-white/20 px-2 py-1 rounded">Edit</Link>
-                    </div>
-                  </div>
-                  <div className="h-2 rounded-full bg-white/5 overflow-hidden">
-                    <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${(event.sold / 300) * 100}%` }} />
-                  </div>
-                  <p className="text-[10px] text-muted mt-1">{event.sold} tickets sold</p>
-                </div>
-              ))}
+            <h2 className="text-xl font-bold mb-6">Quick Links</h2>
+            <div className="flex flex-col gap-3">
+              <Link href="/organizer/payouts" className="p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors flex justify-between items-center text-sm font-medium">
+                Payout Settings <ArrowUpRight className="w-4 h-4" />
+              </Link>
+              <Link href="/support" className="p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors flex justify-between items-center text-sm font-medium">
+                Contact Support <ArrowUpRight className="w-4 h-4" />
+              </Link>
             </div>
           </div>
         </div>

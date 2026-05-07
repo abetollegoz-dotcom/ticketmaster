@@ -27,6 +27,7 @@ enum EventStatus {
   PENDING_APPROVAL
   PUBLISHED
   CANCELLED
+  POSTPONED
   COMPLETED
   SUSPENDED
 }
@@ -427,6 +428,7 @@ model Order {
   promoCodeId     String?
   promoDiscount   Decimal     @default(0) @db.Decimal(10, 2)
   notes           String?
+  manualPaymentNote String?   @db.Text
   ipAddress       String?
   userAgent       String?
   createdAt       DateTime    @default(now())
@@ -567,6 +569,9 @@ model Payment {
   paypalCaptureId   String?
   metadata          Json?
   failureReason     String?
+  isManualPayment   Boolean         @default(false)
+  manualPaymentNote String?         @db.Text
+  manualPaymentRef  String?
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
 

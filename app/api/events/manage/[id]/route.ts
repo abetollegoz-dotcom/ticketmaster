@@ -27,30 +27,35 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 
   const body = await req.json();
-  const { title, description, status, dates, ticketTypes } = body;
+  const { title, description, status, dates, ticketTypes, fallbackProvider, postponeReason } = body;
+
+  // Postpone requires new dates
+  if (status === "POSTPONED" && (!dates || !Array.isArray(dates) || dates.length === 0)) {
+    return apiError("New dates are required when postponing an event", 400);
+  }
 
   const updateData: any = {};
   if (title) updateData.title = title;
   if (description) updateData.description = description;
   if (status) updateData.status = status;
+  if (fallbackProvider !== undefined) updateData.fallbackProvider = fallbackProvider || null;
+  if (postponeReason) updateData.notes = postponeReason;
 
-  // Handle Event Dates (Postponing)
+  // Handle Event Dates (Postponing / Rescheduling)
   if (dates && Array.isArray(dates)) {
-    // Delete old dates and recreate
     await prisma.eventDate.deleteMany({ where: { eventId: id } });
     updateData.dates = {
       create: dates.map((d: any) => ({
         startDate: new Date(d.startDate),
         endDate: new Date(d.endDate),
-        isMainDate: d.isMainDate || false,
+        isMainDate: d.isMainDate ?? false,
+        timezone: d.timezone || "UTC",
       })),
     };
   }
 
-  // Handle Ticket Types (Pricing)
+  // Handle Ticket Types (Pricing, originalPrice)
   if (ticketTypes && Array.isArray(ticketTypes)) {
-    // Only updating existing or adding new. Simplified: delete and recreate if no tickets sold.
-    // For safety, we should only update prices if tickets exist, but for now we'll allow updating price.
     for (const tt of ticketTypes) {
       if (tt.id) {
         await prisma.ticketType.update({
@@ -58,6 +63,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
           data: {
             name: tt.name,
             price: tt.price,
+            originalPrice: tt.originalPrice ?? null,
             quantity: tt.quantity,
           },
         });
@@ -67,6 +73,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
             eventId: id,
             name: tt.name,
             price: tt.price,
+            originalPrice: tt.originalPrice ?? null,
             quantity: tt.quantity,
           },
         });
@@ -77,6 +84,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const updatedEvent = await prisma.event.update({
     where: { id },
     data: updateData,
+    include: { dates: true, ticketTypes: true },
   });
 
   return apiSuccess(updatedEvent);

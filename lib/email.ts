@@ -188,3 +188,140 @@ export async function sendPasswordResetEmail({
 
   return sendEmail({ to, subject: "Reset your EventHub Pro password", html });
 }
+
+export async function sendEventPostponedEmail({
+  to,
+  eventTitle,
+  newDate,
+  reason,
+}: {
+  to: string;
+  eventTitle: string;
+  newDate: string;
+  reason?: string;
+}) {
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8">
+<style>body{font-family:-apple-system,sans-serif;background:#0f0f0f;color:#fff;margin:0}.container{max-width:600px;margin:0 auto;background:#1a1a2e;border-radius:16px;overflow:hidden}.header{background:linear-gradient(135deg,#f59e0b,#d97706);padding:40px;text-align:center}.body{padding:40px}.reason{background:#2a2a4a;padding:16px;border-radius:8px;border-left:4px solid #f59e0b;margin:24px 0}</style>
+</head>
+<body>
+  <div class="container">
+    <div class="header"><h1>⏳ Event Postponed</h1></div>
+    <div class="body">
+      <h2 style="color:#f59e0b">Update for ${eventTitle}</h2>
+      <p>Please note that the event has been postponed. Your tickets remain valid for the new date.</p>
+      <div class="reason">
+        <p style="margin:0;font-size:14px"><strong>New Date:</strong> ${newDate}</p>
+        ${reason ? `<p style="margin:8px 0 0;font-size:13px;color:#999"><strong>Reason:</strong> ${reason}</p>` : ""}
+      </div>
+      <p style="color:#666;font-size:13px">You can view your tickets in your dashboard for the most up-to-date information.</p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  return sendEmail({ to, subject: `⏳ POSTPONED: ${eventTitle}`, html });
+}
+
+export async function sendEventCancelledEmail({
+  to,
+  eventTitle,
+  refundInfo,
+}: {
+  to: string;
+  eventTitle: string;
+  refundInfo: string;
+}) {
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8">
+<style>body{font-family:-apple-system,sans-serif;background:#0f0f0f;color:#fff;margin:0}.container{max-width:600px;margin:0 auto;background:#1a1a2e;border-radius:16px;overflow:hidden}.header{background:linear-gradient(135deg,#ef4444,#dc2626);padding:40px;text-align:center}.body{padding:40px}</style>
+</head>
+<body>
+  <div class="container">
+    <div class="header"><h1>🚫 Event Cancelled</h1></div>
+    <div class="body">
+      <h2 style="color:#ef4444">${eventTitle} has been cancelled</h2>
+      <p>We regret to inform you that the event has been cancelled.</p>
+      <p><strong>Refund Information:</strong></p>
+      <p style="background:#2a2a4a;padding:16px;border-radius:8px">${refundInfo}</p>
+      <p style="color:#666;font-size:13px">We apologize for any inconvenience caused.</p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  return sendEmail({ to, subject: `🚫 CANCELLED: ${eventTitle}`, html });
+}
+
+export async function sendManualPaymentConfirmedEmail({
+  to,
+  name,
+  orderNumber,
+  eventTitle,
+}: {
+  to: string;
+  name: string;
+  orderNumber: string;
+  eventTitle: string;
+}) {
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8">
+<style>body{font-family:-apple-system,sans-serif;background:#0f0f0f;color:#fff;margin:0}.container{max-width:600px;margin:0 auto;background:#1a1a2e;border-radius:16px;overflow:hidden}.header{background:linear-gradient(135deg,#10b981,#059669);padding:40px;text-align:center}.body{padding:40px}.btn{display:inline-block;background:linear-gradient(135deg,#10b981,#059669);color:white;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600}</style>
+</head>
+<body>
+  <div class="container">
+    <div class="header"><h1>✅ Payment Confirmed</h1></div>
+    <div class="body">
+      <p>Hi ${name}, your manual payment for order <strong>${orderNumber}</strong> has been verified!</p>
+      <p>Your tickets for <strong>${eventTitle}</strong> are now active and ready for download.</p>
+      <div style="text-align:center;margin:32px 0"><a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/tickets" class="btn">View My Tickets →</a></div>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  return sendEmail({ to, subject: `✅ Payment Verified — ${eventTitle}`, html });
+}
+
+export async function sendAlternativePaymentInstructionsEmail({
+  to,
+  name,
+  orderNumber,
+  amount,
+  instructions,
+}: {
+  to: string;
+  name: string;
+  orderNumber: string;
+  amount: string;
+  instructions: string;
+}) {
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8">
+<style>body{font-family:-apple-system,sans-serif;background:#0f0f0f;color:#fff;margin:0}.container{max-width:600px;margin:0 auto;background:#1a1a2e;border-radius:16px;overflow:hidden}.header{background:linear-gradient(135deg,#6366f1,#8b5cf6);padding:40px;text-align:center}.body{padding:40px}.box{background:#2a2a4a;padding:24px;border-radius:12px;border:1px solid #6366f1}</style>
+</head>
+<body>
+  <div class="container">
+    <div class="header"><h1>💳 Payment Instructions</h1></div>
+    <div class="body">
+      <p>Hi ${name}, your order <strong>${orderNumber}</strong> for <strong>${amount}</strong> is pending payment.</p>
+      <p>Please follow the instructions below to complete your purchase via an alternative method:</p>
+      <div class="box">
+        <p style="margin:0;white-space:pre-wrap">${instructions}</p>
+      </div>
+      <p style="margin-top:24px;color:#666;font-size:13px">Once paid, please reply to this email with your proof of payment or transaction reference.</p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  return sendEmail({ to, subject: `💳 Payment Instructions for Order ${orderNumber}`, html });
+}

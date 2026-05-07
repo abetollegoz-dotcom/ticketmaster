@@ -10,14 +10,42 @@ import { formatCurrency, formatNumber } from "@/lib/utils";
 import Link from "next/link";
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState({
-    gmv: 1254800,
-    platformRevenue: 62740,
-    totalUsers: 45200,
-    totalEvents: 842,
-    fraudAlerts: 4,
-  });
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    fetch("/api/admin/stats")
+      .then(res => res.json())
+      .then(json => {
+        setData(json.data);
+        setLoading(false);
+      });
+  }, []);
+
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    try {
+      const res = await fetch(`/api/admin/events/${id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!res.ok) throw new Error("Failed to update");
+
+      // Update local state
+      setData({
+        ...data,
+        pendingEvents: data.pendingEvents.filter((e: any) => e.id !== id),
+      });
+      alert(`Event ${newStatus.toLowerCase()}!`);
+    } catch (err) {
+      alert("Error updating status");
+    }
+  };
+
+  if (loading) return <div className="container py-20 text-center">Loading dashboard...</div>;
+
+  const stats = data.stats;
   const mainStats = [
     { label: "GMV", value: formatCurrency(stats.gmv), icon: Globe, color: "text-blue-400" },
     { label: "Platform Revenue", value: formatCurrency(stats.platformRevenue), icon: DollarSign, color: "text-emerald-400" },
@@ -56,7 +84,6 @@ export default function AdminDashboard() {
               <div className="p-2 bg-white/5 rounded-lg">
                 <stat.icon className={`w-5 h-5 ${stat.color}`} />
               </div>
-              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">+12%</span>
             </div>
             <p className="text-sm text-muted mb-1">{stat.label}</p>
             <p className="text-2xl font-bold">{stat.value}</p>
@@ -75,49 +102,55 @@ export default function AdminDashboard() {
               </div>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="bg-white/2 text-muted uppercase text-[10px] font-bold tracking-wider">
-                    <th className="px-6 py-4">Event Details</th>
-                    <th className="px-6 py-4">Organizer</th>
-                    <th className="px-6 py-4">Status</th>
-                    <th className="px-6 py-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {[
-                    { id: "cm32abc", name: "Electronic Beats Night", org: "Neon Pulse", status: "Pending", date: "Oct 12, 2024" },
-                    { id: "cm32def", name: "Global Tech Summit", org: "InnoCorp", status: "Pending", date: "Nov 05, 2024" },
-                    { id: "cm32ghi", name: "Underground Jazz", org: "Blue Note", status: "Pending", date: "Oct 28, 2024" },
-                  ].map((event, i) => (
-                    <tr key={i} className="hover:bg-white/2 transition-colors">
-                      <td className="px-6 py-4">
-                        <p className="font-semibold">{event.name}</p>
-                        <p className="text-[10px] text-muted">{event.date}</p>
-                      </td>
-                      <td className="px-6 py-4 text-secondary">{event.org}</td>
-                      <td className="px-6 py-4">
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400">
-                          {event.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex justify-end gap-2">
-                          <button className="p-2 hover:bg-emerald-500/20 text-emerald-400 rounded-lg" title="Approve">
-                            <CheckCircle className="w-4 h-4" />
-                          </button>
-                          <button className="p-2 hover:bg-red-500/20 text-red-400 rounded-lg" title="Reject">
-                            <Ban className="w-4 h-4" />
-                          </button>
-                          <Link href={`/admin/events/${event.id}/edit`} className="p-2 hover:bg-indigo-500/20 text-indigo-400 rounded-lg" title="Edit">
-                            <MoreVertical className="w-4 h-4" />
-                          </Link>
-                        </div>
-                      </td>
+              {data.pendingEvents.length === 0 ? (
+                <div className="p-12 text-center text-muted">No pending events to moderate.</div>
+              ) : (
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="bg-white/2 text-muted uppercase text-[10px] font-bold tracking-wider">
+                      <th className="px-6 py-4">Event Details</th>
+                      <th className="px-6 py-4">Organizer</th>
+                      <th className="px-6 py-4">Status</th>
+                      <th className="px-6 py-4 text-right">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {data.pendingEvents.map((event: any, i: number) => (
+                      <tr key={i} className="hover:bg-white/2 transition-colors">
+                        <td className="px-6 py-4">
+                          <p className="font-semibold">{event.name}</p>
+                          <p className="text-[10px] text-muted">Submitted {event.date}</p>
+                        </td>
+                        <td className="px-6 py-4 text-secondary">{event.org}</td>
+                        <td className="px-6 py-4">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400">
+                            {event.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex justify-end gap-2">
+                            <button 
+                              onClick={() => handleStatusChange(event.id, "PUBLISHED")}
+                              className="p-2 hover:bg-emerald-500/20 text-emerald-400 rounded-lg" title="Approve"
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                            </button>
+                            <button 
+                              onClick={() => handleStatusChange(event.id, "CANCELLED")}
+                              className="p-2 hover:bg-red-500/20 text-red-400 rounded-lg" title="Reject"
+                            >
+                              <Ban className="w-4 h-4" />
+                            </button>
+                            <Link href={`/admin/events/${event.id}/edit`} className="p-2 hover:bg-indigo-500/20 text-indigo-400 rounded-lg" title="Edit">
+                              <MoreVertical className="w-4 h-4" />
+                            </Link>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
             <div className="p-4 border-t border-white/5 text-center">
               <button className="text-xs text-indigo-400 font-semibold hover:underline">View all moderation tasks</button>
