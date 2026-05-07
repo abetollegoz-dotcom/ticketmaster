@@ -9,7 +9,7 @@ export default function SettingsForm({ profile }: { profile: any }) {
   const router = useRouter();
   const [formData, setFormData] = useState({
     organizationName: profile.organizationName || "",
-    bio: profile.bio || "",
+    description: profile.description || "",
     website: profile.website || "",
     phone: profile.phone || "",
   });
@@ -103,13 +103,13 @@ export default function SettingsForm({ profile }: { profile: any }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2 text-muted">Organization Bio</label>
+              <label className="block text-sm font-medium mb-2 text-muted">Organization Description</label>
               <textarea
                 rows={4}
                 className="input w-full resize-none"
                 placeholder="Briefly describe your organization..."
-                value={formData.bio}
-                onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               />
             </div>
 

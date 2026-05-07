@@ -14,13 +14,13 @@ export async function PUT(req: NextRequest) {
   if (!profile) return apiError("Organizer profile not found", 404);
 
   const body = await req.json();
-  const { organizationName, bio, website, phone } = body;
+  const { organizationName, description, website, phone } = body;
 
   const updated = await prisma.organizerProfile.update({
     where: { id: profile.id },
     data: {
       organizationName,
-      bio,
+      description,
       website,
       phone,
     },
