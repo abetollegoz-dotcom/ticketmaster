@@ -1,3 +1,4 @@
+"use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Calendar, Clock, Plus, Trash2, Save, AlertTriangle, ChevronRight, Layout, Ticket as TicketIcon } from "lucide-react";
