@@ -5,8 +5,8 @@ import NewEventForm from "./new-event-form";
 
 export default async function NewEventPage() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ORGANIZER") {
-    redirect("/login");
+  if (!session?.user || (session.user.role !== "ORGANIZER" && session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN")) {
+    redirect("/login?callbackUrl=/organizer/events/new");
   }
 
   const profile = await prisma.organizerProfile.findUnique({

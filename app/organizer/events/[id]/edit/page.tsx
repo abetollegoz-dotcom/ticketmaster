@@ -5,14 +5,22 @@ import EventEditForm from "./event-edit-form";
 
 export default async function OrganizerEventEditPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ORGANIZER") {
-    redirect("/login");
+  const { id } = await params;
+
+  if (!session?.user || (session.user.role !== "ORGANIZER" && session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN")) {
+    redirect(`/login?callbackUrl=/organizer/events/${id}/edit`);
   }
 
-  const profile = await prisma.organizerProfile.findUnique({ where: { userId: session.user.id } });
-  if (!profile) redirect("/organizer");
+  // For organizers, ensure they own the event
+  if (session.user.role === "ORGANIZER") {
+    const profile = await prisma.organizerProfile.findUnique({ where: { userId: session.user.id } });
+    if (!profile) redirect("/organizer");
 
-  const { id } = await params;
+    const event = await prisma.event.findUnique({ where: { id }, select: { organizerId: true } });
+    if (!event || event.organizerId !== profile.id) {
+      redirect("/organizer");
+    }
+  }
 
   const event = await prisma.event.findUnique({
     where: { id },
@@ -23,7 +31,7 @@ export default async function OrganizerEventEditPage({ params }: { params: Promi
     },
   });
 
-  if (!event || event.organizerId !== profile.id) {
+  if (!event) {
     redirect("/organizer");
   }
 
@@ -35,6 +43,7 @@ export default async function OrganizerEventEditPage({ params }: { params: Promi
     status: event.status,
     dates: event.dates,
     ticketTypes: event.ticketTypes,
+    fallbackProvider: event.fallbackProvider,
   };
 
   return (
