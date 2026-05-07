@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Search, Filter, MoreVertical, Edit3, ShieldAlert, Globe, Star, Calendar } from "lucide-react";
+import { Search, Filter, MoreVertical, Edit3, ShieldAlert, Globe, Star, Calendar, TrendingUp } from "lucide-react";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { toast } from "@/components/ui/toaster";
 import { formatDateShort } from "@/lib/utils";
