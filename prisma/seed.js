@@ -92,7 +92,7 @@ async function main() {
       isFeatured: true,
       isTrending: true,
       publishedAt: new Date(),
-      images: ["https://images.unsplash.com/photo-1540575467063-178a50c2df87"],
+      images: "https://images.unsplash.com/photo-1540575467063-178a50c2df87",
       dates: {
         create: [
           {

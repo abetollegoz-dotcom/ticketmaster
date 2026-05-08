@@ -22,7 +22,7 @@ export interface EventCard {
   title: string;
   slug: string;
   shortDesc?: string | null;
-  images: string[];
+  images: string[] | string;
   isFeatured: boolean;
   isTrending: boolean;
   category?: { name: string; slug: string; color?: string | null } | null;
@@ -35,7 +35,7 @@ export interface EventCard {
 
 export interface EventDetail extends EventCard {
   description: string;
-  tags: string[];
+  tags: string[] | string;
   refundPolicy?: string | null;
   metaTitle?: string | null;
   metaDesc?: string | null;

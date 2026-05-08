@@ -70,7 +70,10 @@ export function EventDetailClient({ event, related }: EventDetailClientProps) {
     toast.success(`${added} ticket${added > 1 ? "s" : ""} added to cart!`);
   };
 
-  const images = event.images.length ? event.images : ["https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&q=80"];
+  const images = Array.isArray(event.images)
+    ? (event.images.length ? event.images : ["https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&q=80"])
+    : (event.images ? [event.images] : ["https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&q=80"]);
+
   const avgRating = event.reviews.length ? event.reviews.reduce((s, r) => s + r.rating, 0) / event.reviews.length : 0;
 
   return (

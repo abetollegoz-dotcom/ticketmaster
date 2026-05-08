@@ -7,117 +7,37 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
 // ─── Enums ───────────────────────────────────────────────────
 
-enum UserRole {
-  CUSTOMER
-  ORGANIZER
-  STAFF_SCANNER
-  SUPPORT_AGENT
-  ADMIN
-  SUPER_ADMIN
-}
 
-enum EventStatus {
-  DRAFT
-  PENDING_APPROVAL
-  PUBLISHED
-  CANCELLED
-  POSTPONED
-  COMPLETED
-  SUSPENDED
-}
 
-enum TicketStatus {
-  VALID
-  USED
-  TRANSFERRED
-  REFUNDED
-  CANCELLED
-  EXPIRED
-}
 
-enum OrderStatus {
-  PENDING
-  CONFIRMED
-  CANCELLED
-  REFUNDED
-  PARTIALLY_REFUNDED
-}
 
-enum PaymentStatus {
-  PENDING
-  PROCESSING
-  COMPLETED
-  FAILED
-  REFUNDED
-  PARTIALLY_REFUNDED
-  DISPUTED
-}
 
-enum PaymentProvider {
-  STRIPE
-  PAYPAL
-  MOLLIE
-}
 
-enum PayoutStatus {
-  PENDING
-  PROCESSING
-  COMPLETED
-  FAILED
-}
 
-enum PromoCodeType {
-  PERCENTAGE
-  FIXED_AMOUNT
-  FREE_TICKET
-}
 
-enum SupportTicketStatus {
-  OPEN
-  IN_PROGRESS
-  RESOLVED
-  CLOSED
-}
 
-enum SupportTicketPriority {
-  LOW
-  MEDIUM
-  HIGH
-  URGENT
-}
 
-enum NotificationType {
-  ORDER_CONFIRMED
-  TICKET_ISSUED
-  EVENT_REMINDER
-  EVENT_CANCELLED
-  REFUND_PROCESSED
-  TRANSFER_RECEIVED
-  PAYOUT_SENT
-  ACCOUNT_SECURITY
-}
 
-enum TicketTypeCategory {
-  GENERAL
-  VIP
-  EARLY_BIRD
-  STUDENT
-  GROUP
-  BALCONY
-  FLOOR
-  BACKSTAGE
-}
 
-enum PricingRule {
-  FIXED
-  DYNAMIC
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // ─── Users & Auth ────────────────────────────────────────────
 
@@ -128,7 +48,7 @@ model User {
   emailVerified     DateTime?
   password          String?
   image             String?
-  role              UserRole  @default(CUSTOMER)
+  role              String  @default("CUSTOMER")
   twoFactorEnabled  Boolean   @default(false)
   twoFactorSecret   String?
   isActive          Boolean   @default(true)
@@ -165,12 +85,12 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String?  @db.Text
-  access_token      String?  @db.Text
+  refresh_token     String?  
+  access_token      String?  
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String?  @db.Text
+  id_token          String?  
   session_state     String?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
@@ -205,7 +125,7 @@ model VerificationToken {
 model PaymentMethod {
   id             String   @id @default(cuid())
   userId         String
-  provider       PaymentProvider
+  provider       String
   stripeMethodId String?
   last4          String?
   brand          String?
@@ -226,7 +146,7 @@ model OrganizerProfile {
   userId           String   @unique
   organizationName String
   slug             String   @unique
-  description      String?  @db.Text
+  description      String?  
   website          String?
   logo             String?
   banner           String?
@@ -236,7 +156,7 @@ model OrganizerProfile {
   taxId            String?
   country          String?
   phone            String?
-  totalRevenue     Decimal  @default(0) @db.Decimal(12, 2)
+  totalRevenue     Float  @default(0)
   totalTicketsSold Int      @default(0)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -256,7 +176,7 @@ model Venue {
   id          String   @id @default(cuid())
   name        String
   slug        String   @unique
-  description String?  @db.Text
+  description String?  
   address     String
   city        String
   state       String?
@@ -325,18 +245,18 @@ model Event {
   id              String      @id @default(cuid())
   title           String
   slug            String      @unique
-  description     String      @db.Text
+  description     String      
   shortDesc       String?
-  images          String[]
+  images          String?
   venueId         String?
   organizerId     String
   categoryId      String?
-  status          EventStatus @default(DRAFT)
+  status          String @default("DRAFT")
   isFeatured      Boolean     @default(false)
   isTrending      Boolean     @default(false)
   ageRestriction  Int?
-  refundPolicy    String?     @db.Text
-  tags            String[]
+  refundPolicy    String?     
+  tags            String?
   metaTitle       String?
   metaDesc        String?
   totalViews      Int         @default(0)
@@ -344,7 +264,7 @@ model Event {
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
   publishedAt     DateTime?
-  fallbackProvider PaymentProvider?
+  fallbackProvider String?
 
   venue        Venue?            @relation(fields: [venueId], references: [id])
   organizer    OrganizerProfile  @relation(fields: [organizerId], references: [id])
@@ -388,9 +308,9 @@ model TicketType {
   eventId          String
   name             String
   description      String?
-  category         TicketTypeCategory @default(GENERAL)
-  price            Decimal            @db.Decimal(10, 2)
-  originalPrice    Decimal?           @db.Decimal(10, 2)
+  category         String @default("GENERAL")
+  price            Float           
+  originalPrice    Float?          
   quantity         Int
   quantitySold     Int                @default(0)
   quantityReserved Int                @default(0)
@@ -398,7 +318,7 @@ model TicketType {
   maxPerOrder      Int                @default(10)
   saleStartDate    DateTime?
   saleEndDate      DateTime?
-  pricingRule      PricingRule        @default(FIXED)
+  pricingRule      String        @default("FIXED")
   isVisible        Boolean            @default(true)
   sortOrder        Int                @default(0)
   createdAt        DateTime           @default(now())
@@ -418,17 +338,17 @@ model Order {
   id              String      @id @default(cuid())
   orderNumber     String      @unique
   userId          String
-  status          OrderStatus @default(PENDING)
-  subtotal        Decimal     @db.Decimal(10, 2)
-  discount        Decimal     @default(0) @db.Decimal(10, 2)
-  taxAmount       Decimal     @default(0) @db.Decimal(10, 2)
-  serviceFee      Decimal     @default(0) @db.Decimal(10, 2)
-  total           Decimal     @db.Decimal(10, 2)
+  status          String @default("PENDING")
+  subtotal        Float    
+  discount        Float     @default(0)
+  taxAmount       Float     @default(0)
+  serviceFee      Float     @default(0)
+  total           Float    
   currency        String      @default("USD")
   promoCodeId     String?
-  promoDiscount   Decimal     @default(0) @db.Decimal(10, 2)
+  promoDiscount   Float     @default(0)
   notes           String?
-  manualPaymentNote String?   @db.Text
+  manualPaymentNote String?   
   ipAddress       String?
   userAgent       String?
   createdAt       DateTime    @default(now())
@@ -457,8 +377,8 @@ model OrderItem {
   ticketTypeId String
   seatId       String?
   quantity     Int
-  unitPrice    Decimal  @db.Decimal(10, 2)
-  totalPrice   Decimal  @db.Decimal(10, 2)
+  unitPrice    Float 
+  totalPrice   Float 
   createdAt    DateTime @default(now())
 
   order      Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
@@ -476,7 +396,7 @@ model OrderUpsell {
   id        String  @id @default(cuid())
   orderId   String
   name      String
-  price     Decimal @db.Decimal(10, 2)
+  price     Float
   quantity  Int     @default(1)
 
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
@@ -493,14 +413,14 @@ model Ticket {
   orderItemId  String?
   ticketTypeId String
   ownerId      String
-  status       TicketStatus @default(VALID)
+  status       String @default("VALID")
   qrCode       String       @unique
   qrSecret     String
   usedAt       DateTime?
   usedByStaff  String?
   transferredAt DateTime?
   expiresAt    DateTime?
-  metadata     Json?
+  metadata     String?
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
@@ -559,18 +479,18 @@ model Scan {
 model Payment {
   id                String          @id @default(cuid())
   orderId           String          @unique
-  provider          PaymentProvider
-  status            PaymentStatus   @default(PENDING)
-  amount            Decimal         @db.Decimal(10, 2)
+  provider          String
+  status            String   @default("PENDING")
+  amount            Float        
   currency          String          @default("USD")
   stripeIntentId    String?
   stripeChargeId    String?
   paypalOrderId     String?
   paypalCaptureId   String?
-  metadata          Json?
+  metadata          String?
   failureReason     String?
   isManualPayment   Boolean         @default(false)
-  manualPaymentNote String?         @db.Text
+  manualPaymentNote String?         
   manualPaymentRef  String?
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
@@ -587,9 +507,9 @@ model Refund {
   id          String        @id @default(cuid())
   orderId     String
   paymentId   String
-  amount      Decimal       @db.Decimal(10, 2)
+  amount      Float      
   reason      String?
-  status      PaymentStatus @default(PENDING)
+  status      String @default("PENDING")
   stripeRefundId String?
   processedAt DateTime?
   createdAt   DateTime      @default(now())
@@ -606,9 +526,9 @@ model Refund {
 model Payout {
   id              String       @id @default(cuid())
   organizerId     String
-  amount          Decimal      @db.Decimal(10, 2)
+  amount          Float     
   currency        String       @default("USD")
-  status          PayoutStatus @default(PENDING)
+  status          String @default("PENDING")
   stripePayoutId  String?
   description     String?
   periodStart     DateTime
@@ -628,9 +548,9 @@ model PromoCode {
   id              String        @id @default(cuid())
   eventId         String?
   code            String        @unique
-  type            PromoCodeType
-  amount          Decimal       @db.Decimal(10, 2)
-  minOrderAmount  Decimal?      @db.Decimal(10, 2)
+  type            String
+  amount          Float      
+  minOrderAmount  Float?     
   maxUses         Int?
   usedCount       Int           @default(0)
   perUserLimit    Int           @default(1)
@@ -652,10 +572,10 @@ model Affiliate {
   eventId     String?
   name        String
   code        String  @unique
-  commission  Decimal @db.Decimal(5, 2)
+  commission  Float 
   clicks      Int     @default(0)
   conversions Int     @default(0)
-  revenue     Decimal @default(0) @db.Decimal(10, 2)
+  revenue     Float @default(0)
   isActive    Boolean @default(true)
   createdAt   DateTime @default(now())
 
@@ -722,7 +642,7 @@ model Review {
   userId    String
   eventId   String
   rating    Int
-  comment   String?  @db.Text
+  comment   String?  
   isVisible Boolean  @default(true)
   createdAt DateTime @default(now())
 
@@ -738,10 +658,10 @@ model Review {
 model Notification {
   id        String           @id @default(cuid())
   userId    String
-  type      NotificationType
+  type      String
   title     String
   message   String
-  data      Json?
+  data      String?
   isRead    Boolean          @default(false)
   createdAt DateTime         @default(now())
 
@@ -758,12 +678,12 @@ model SupportTicket {
   userId     String
   agentId    String?
   subject    String
-  message    String                @db.Text
-  status     SupportTicketStatus   @default(OPEN)
-  priority   SupportTicketPriority @default(MEDIUM)
+  message    String                
+  status     String   @default("OPEN")
+  priority   String @default("MEDIUM")
   category   String?
   orderId    String?
-  resolution String?               @db.Text
+  resolution String?               
   createdAt  DateTime              @default(now())
   updatedAt  DateTime              @updatedAt
   resolvedAt DateTime?
@@ -781,7 +701,7 @@ model SupportTicketReply {
   id        String   @id @default(cuid())
   ticketId  String
   authorId  String
-  message   String   @db.Text
+  message   String   
   isStaff   Boolean  @default(false)
   createdAt DateTime @default(now())
 
@@ -798,8 +718,8 @@ model AuditLog {
   action     String
   resource   String
   resourceId String?
-  oldData    Json?
-  newData    Json?
+  oldData    String?
+  newData    String?
   ipAddress  String?
   userAgent  String?
   createdAt  DateTime @default(now())
@@ -829,7 +749,7 @@ model CmsPage {
   id          String   @id @default(cuid())
   title       String
   slug        String   @unique
-  content     String   @db.Text
+  content     String   
   metaTitle   String?
   metaDesc    String?
   isPublished Boolean  @default(false)

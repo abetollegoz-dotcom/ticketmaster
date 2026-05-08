@@ -12,7 +12,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: event.metaTitle || event.title,
     description: event.metaDesc || event.shortDesc || "",
-    openGraph: { title: event.title, description: event.shortDesc || "", images: event.images[0] ? [event.images[0]] : [] },
+    openGraph: { 
+      title: event.title, 
+      description: event.shortDesc || "", 
+      images: Array.isArray(event.images) 
+        ? (event.images[0] ? [event.images[0]] : []) 
+        : (event.images ? [event.images] : [])
+    },
   };
 }
 

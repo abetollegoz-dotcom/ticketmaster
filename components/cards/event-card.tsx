@@ -18,7 +18,11 @@ export function EventCardComponent({ event, variant = "default", priority = fals
     ? Math.min(...event.ticketTypes.map((t) => Number(t.price)))
     : 0;
   const startDate = event.dates[0]?.startDate;
-  const image = event.images[0] || `https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80`;
+  
+  // Handle images as array or single string (for SQLite compatibility)
+  const image = Array.isArray(event.images) 
+    ? (event.images[0] || `https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80`)
+    : (event.images || `https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80`);
 
   if (variant === "compact") {
     return (
