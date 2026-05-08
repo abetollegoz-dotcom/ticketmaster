@@ -4,6 +4,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiError } from "@/lib/utils";
 import { auth } from "@/lib/auth";
+import { issueTicketsForOrder } from "@/lib/orders";
 
 // GET /api/admin/orders/[id] — get full order detail
 export async function GET(
@@ -73,36 +74,41 @@ export async function PATCH(
   if (!order) return apiError("Order not found", 404);
 
   try {
-    // Update order status
-    const orderUpdate: any = {};
-    if (orderStatus) orderUpdate.status = orderStatus;
-    if (manualPaymentNote) orderUpdate.manualPaymentNote = manualPaymentNote;
+    // If we are confirming a PENDING order, trigger ticket issuance
+    if (orderStatus === "CONFIRMED" && order.status !== "CONFIRMED") {
+      await issueTicketsForOrder(id);
+      // Note: issueTicketsForOrder handles status updates for order and payment too.
+    } else {
+      // Manual status updates (for non-confirmation cases or just notes)
+      const orderUpdate: any = {};
+      if (orderStatus) orderUpdate.status = orderStatus;
+      if (manualPaymentNote) orderUpdate.manualPaymentNote = manualPaymentNote;
 
-    if (Object.keys(orderUpdate).length > 0) {
-      await prisma.order.update({ where: { id }, data: orderUpdate });
-    }
+      if (Object.keys(orderUpdate).length > 0) {
+        await prisma.order.update({ where: { id }, data: orderUpdate });
+      }
 
-    // Update or create payment record
-    if (paymentStatus || provider || manualPaymentRef !== undefined || isManualPayment !== undefined) {
-      const paymentUpdate: any = {};
-      if (paymentStatus) paymentUpdate.status = paymentStatus;
-      if (provider) paymentUpdate.provider = provider;
-      if (manualPaymentRef !== undefined) paymentUpdate.manualPaymentRef = manualPaymentRef;
-      if (manualPaymentNote) paymentUpdate.manualPaymentNote = manualPaymentNote;
-      if (isManualPayment !== undefined) paymentUpdate.isManualPayment = isManualPayment;
+      if (paymentStatus || provider || manualPaymentRef !== undefined || isManualPayment !== undefined) {
+        const paymentUpdate: any = {};
+        if (paymentStatus) paymentUpdate.status = paymentStatus;
+        if (provider) paymentUpdate.provider = provider;
+        if (manualPaymentRef !== undefined) paymentUpdate.manualPaymentRef = manualPaymentRef;
+        if (manualPaymentNote) paymentUpdate.manualPaymentNote = manualPaymentNote;
+        if (isManualPayment !== undefined) paymentUpdate.isManualPayment = isManualPayment;
 
-      if (order.payment) {
-        await prisma.payment.update({ where: { orderId: id }, data: paymentUpdate });
-      } else {
-        await prisma.payment.create({
-          data: {
-            orderId: id,
-            provider: provider || "STRIPE",
-            amount: order.total,
-            currency: order.currency,
-            ...paymentUpdate,
-          },
-        });
+        if (order.payment) {
+          await prisma.payment.update({ where: { orderId: id }, data: paymentUpdate });
+        } else {
+          await prisma.payment.create({
+            data: {
+              orderId: id,
+              provider: provider || "STRIPE",
+              amount: order.total,
+              currency: order.currency,
+              ...paymentUpdate,
+            },
+          });
+        }
       }
     }
 
@@ -117,11 +123,27 @@ export async function PATCH(
       },
     });
 
+    // RETURN THE FULL OBJECT to keep frontend in sync
     const updated = await prisma.order.findUnique({
       where: { id },
       include: {
+        user: { select: { id: true, name: true, email: true } },
         payment: true,
-        tickets: { include: { ticketType: { select: { name: true } } } },
+        items: {
+          include: {
+            event: { select: { id: true, title: true, slug: true } },
+            eventDate: { select: { startDate: true } },
+            ticketType: { select: { name: true, category: true } },
+            tickets: true,
+          },
+        },
+        tickets: {
+          include: {
+            ticketType: { select: { name: true, category: true } },
+          },
+          orderBy: { createdAt: "asc" },
+        },
+        refunds: { orderBy: { createdAt: "desc" } },
       },
     });
 

@@ -7,6 +7,7 @@ import { generateTicketPayload } from "@/lib/qrcode";
 import { generateTicketNumber, generateToken } from "@/lib/utils";
 import { sendOrderConfirmation } from "@/lib/email";
 import { rdel, CacheKeys } from "@/lib/redis";
+import { issueTicketsForOrder } from "@/lib/orders";
 
 
 
@@ -39,96 +40,18 @@ export async function POST(req: NextRequest) {
 async function handlePaymentSuccess(stripeIntentId: string) {
   const payment = await prisma.payment.findFirst({
     where: { stripeIntentId },
-    include: {
-      order: {
-        include: {
-          user: true,
-          items: { include: { ticketType: true, event: { select: { title: true, slug: true } }, eventDate: true } },
-        },
-      },
-    },
   });
   if (!payment || payment.status === "COMPLETED") return;
 
-  // Update payment + order
-  await prisma.$transaction(async (tx: any) => {
-    await tx.payment.update({ where: { id: payment.id }, data: { status: "COMPLETED" } });
-    await tx.order.update({ where: { id: payment.orderId }, data: { status: "CONFIRMED" } });
+  // Use centralized logic to issue tickets and update order
+  const order = await issueTicketsForOrder(payment.orderId);
 
-    // Issue tickets
-    const tickets: { ticketNumber: string; qrCode: string }[] = [];
-    let idx = 0;
-    for (const item of payment.order.items) {
-      for (let q = 0; q < item.quantity; q++) {
-        idx++;
-        const ticketNumber = generateTicketNumber(item.event?.slug || "evt", idx);
-        const qrSecret = generateToken(16);
-        const qrCode = generateTicketPayload(ticketNumber, payment.order.id);
-
-        await tx.ticket.create({
-          data: {
-            ticketNumber,
-            orderId: payment.orderId,
-            orderItemId: item.id,
-            ticketTypeId: item.ticketTypeId,
-            ownerId: payment.order.userId,
-            qrCode,
-            qrSecret,
-            expiresAt: item.eventDate?.startDate ? new Date(item.eventDate.startDate.getTime() + 24 * 60 * 60 * 1000) : undefined,
-          },
-        });
-        tickets.push({ ticketNumber, qrCode });
-      }
-
-      // Update sold count, remove reservation
-      await tx.ticketType.update({
-        where: { id: item.ticketTypeId },
-        data: { quantitySold: { increment: item.quantity }, quantityReserved: { decrement: item.quantity } },
-      });
-
-      // Update organizer stats
-      await tx.organizerProfile.update({
-        where: { id: item.ticketType.eventId }, // Fixed in real code
-        data: { totalTicketsSold: { increment: item.quantity } },
-      }).catch(() => {});
+  // Invalidate event cache for all items in the order
+  if (order && 'items' in order) {
+    for (const item of (order as any).items) {
+      if (item.event?.slug) await rdel(CacheKeys.eventSlug(item.event.slug));
+      await rdel(CacheKeys.ticketStock(item.ticketTypeId));
     }
-
-    // Promo code usage
-    if (payment.order.promoCodeId) {
-      await tx.promoCode.update({ where: { id: payment.order.promoCodeId }, data: { usedCount: { increment: 1 } } });
-    }
-
-    // Notification
-    await tx.notification.create({
-      data: {
-        userId: payment.order.userId,
-        type: "ORDER_CONFIRMED",
-        title: "Order Confirmed! 🎟️",
-        message: `Your order #${payment.order.orderNumber} has been confirmed.`,
-        data: { orderId: payment.orderId, orderNumber: payment.order.orderNumber },
-      },
-    });
-  });
-
-  // Invalidate event cache
-  for (const item of payment.order.items) {
-    if (item.event?.slug) await rdel(CacheKeys.eventSlug(item.event.slug));
-    await rdel(CacheKeys.ticketStock(item.ticketTypeId));
-  }
-
-  // Send confirmation email
-  const firstItem = payment.order.items[0];
-  if (payment.order.user?.email) {
-    await sendOrderConfirmation({
-      to: payment.order.user.email,
-      name: payment.order.user.name || "there",
-      orderNumber: payment.order.orderNumber,
-      eventTitle: firstItem?.event?.title || "Your Event",
-      eventDate: firstItem?.eventDate?.startDate?.toLocaleDateString() || "",
-      total: `$${Number(payment.order.total).toFixed(2)}`,
-      ticketCount: payment.order.items.reduce((s: number, i: any) => s + i.quantity, 0),
-      ticketsUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/tickets`,
-    });
   }
 }
 

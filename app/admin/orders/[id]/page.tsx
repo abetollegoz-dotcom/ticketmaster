@@ -92,37 +92,37 @@ export default function AdminOrderDetailPage() {
             <div className="flex justify-between items-start mb-6">
               <div>
                 <p className="text-[10px] text-muted uppercase font-bold tracking-widest mb-1">Order Summary</p>
-                <h1 className="text-2xl font-mono font-bold text-indigo-400">{order.orderNumber}</h1>
+                <h1 className="text-2xl font-mono font-bold text-indigo-400">{order?.orderNumber}</h1>
               </div>
-              <StatusBadge status={order.status} className="px-4 py-1" />
+              <StatusBadge status={order?.status} className="px-4 py-1" />
             </div>
 
             <div className="grid grid-cols-2 gap-8 mb-8">
               <div>
                 <p className="text-xs text-muted mb-1 flex items-center gap-1"><User className="w-3 h-3" /> Customer</p>
-                <p className="font-semibold">{order.user.name}</p>
-                <p className="text-xs text-secondary">{order.user.email}</p>
+                <p className="font-semibold">{order?.user?.name}</p>
+                <p className="text-xs text-secondary">{order?.user?.email}</p>
               </div>
               <div>
                 <p className="text-xs text-muted mb-1 flex items-center gap-1"><Calendar className="w-3 h-3" /> Placed On</p>
-                <p className="font-semibold">{formatDate(order.createdAt)}</p>
+                <p className="font-semibold">{order?.createdAt ? formatDate(order.createdAt) : "—"}</p>
               </div>
             </div>
 
             <div className="border-t border-white/5 pt-6">
                <p className="text-xs text-muted mb-4 uppercase font-bold tracking-widest">Order Items</p>
-               {order.items.map((item: any, i: number) => (
+               {order?.items?.map((item: any, i: number) => (
                  <div key={i} className="flex justify-between items-center mb-4 last:mb-0">
                     <div>
-                      <p className="font-bold">{item.event.title}</p>
-                      <p className="text-xs text-secondary">{item.quantity}x {item.ticketType.name} ({item.ticketType.category})</p>
+                      <p className="font-bold">{item.event?.title}</p>
+                      <p className="text-xs text-secondary">{item.quantity}x {item.ticketType?.name} ({item.ticketType?.category})</p>
                     </div>
                     <p className="font-bold">{formatCurrency(item.totalPrice)}</p>
                  </div>
                ))}
                <div className="border-t border-white/5 mt-6 pt-4 flex justify-between items-center">
                   <p className="text-lg font-bold">Total Amount</p>
-                  <p className="text-2xl font-black text-indigo-400">{formatCurrency(order.total)}</p>
+                  <p className="text-2xl font-black text-indigo-400">{order?.total ? formatCurrency(order.total) : "—"}</p>
                </div>
             </div>
           </div>
@@ -133,14 +133,14 @@ export default function AdminOrderDetailPage() {
               <Ticket className="w-5 h-5 text-indigo-400" /> Ticket Management
             </h2>
             <div className="space-y-4">
-              {order.tickets.map((ticket: any) => (
+              {order?.tickets?.map((ticket: any) => (
                 <div key={ticket.id} className="p-4 rounded-xl border border-white/5 bg-white/2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <p className="font-mono text-xs font-bold">{ticket.ticketNumber}</p>
                       <StatusBadge status={ticket.status} />
                     </div>
-                    <p className="text-xs text-secondary">{ticket.ticketType.name}</p>
+                    <p className="text-xs text-secondary">{ticket.ticketType?.name}</p>
                   </div>
                   <div className="flex gap-2">
                     <button 
@@ -167,6 +167,9 @@ export default function AdminOrderDetailPage() {
                   </div>
                 </div>
               ))}
+              {(!order?.tickets || order.tickets.length === 0) && (
+                <p className="text-center py-4 text-xs text-muted italic">No tickets have been issued yet. Approve the order to generate tickets.</p>
+              )}
             </div>
           </div>
         </div>
