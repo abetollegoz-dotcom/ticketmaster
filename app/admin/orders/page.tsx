@@ -5,6 +5,7 @@ import { Search, Filter, CreditCard, Clock, CheckCircle, XCircle, ChevronRight, 
 import { StatusBadge } from "@/components/ui/status-badge";
 import { formatCurrency, formatDateShort } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "@/components/ui/toaster";
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
