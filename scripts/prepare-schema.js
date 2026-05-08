@@ -13,8 +13,9 @@ if (isProduction) {
   schema = schema.replace(/provider = "sqlite"/, 'provider = "postgresql"');
   
   // 2. Restore Decimal types (with attributes if they were there)
-  // We'll restore a generic Decimal(10, 2) which is what most fields had
-  schema = schema.replace(/ Float/g, ' Decimal @db.Decimal(10, 2)');
+  // We handle both optional and required fields
+  schema = schema.replace(/ Float\?/g, ' Decimal? @db.Decimal(10, 2)');
+  schema = schema.replace(/ Float\b/g, ' Decimal @db.Decimal(10, 2)');
   
   // 3. Restore Json types
   const jsonFields = ['metadata', 'data', 'oldData', 'newData'];
