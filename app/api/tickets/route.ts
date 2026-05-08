@@ -11,7 +11,9 @@ import { z } from "zod";
 
 // GET /api/tickets — list user's tickets
 export async function GET() {
+  console.log("[Tickets API] GET request received");
   const session = await auth();
+  console.log("[Tickets API] Session:", session?.user?.email || "No session");
   if (!session?.user) return apiError("Unauthorized", 401);
 
   const tickets = await prisma.ticket.findMany({

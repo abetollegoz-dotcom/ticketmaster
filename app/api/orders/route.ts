@@ -6,7 +6,9 @@ import { prisma } from "@/lib/prisma";
 import { apiSuccess, apiError } from "@/lib/utils";
 
 export async function GET(req: NextRequest) {
+  console.log("[Orders API] GET request received");
   const session = await auth();
+  console.log("[Orders API] Session:", session?.user?.email || "No session");
   if (!session?.user) return apiError("Unauthorized", 401);
 
   const orders = await prisma.order.findMany({
