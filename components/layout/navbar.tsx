@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, ShoppingCart, Menu, X, Ticket, Bell, User,
-  ChevronDown, LogOut, Settings, LayoutDashboard, Zap
+  ChevronDown, LogOut, Settings, LayoutDashboard, Zap, ShoppingBag
 } from "lucide-react";
 
 const NAV_LINKS = [
@@ -136,6 +136,7 @@ export function Navbar() {
                         </div>
                         <UserMenuItem href="/dashboard" icon={<LayoutDashboard className="w-4 h-4" />} label="My Dashboard" />
                         <UserMenuItem href="/dashboard/tickets" icon={<Ticket className="w-4 h-4" />} label="My Tickets" />
+                        <UserMenuItem href="/dashboard/orders" icon={<ShoppingBag className="w-4 h-4" />} label="My Orders" />
                         {(session.user?.role === "ORGANIZER" || session.user?.role === "ADMIN" || session.user?.role === "SUPER_ADMIN") && (
                           <UserMenuItem href="/organizer" icon={<Zap className="w-4 h-4" />} label="Organizer Portal" />
                         )}
