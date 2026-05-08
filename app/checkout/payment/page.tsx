@@ -96,6 +96,7 @@ export default function PaymentPage() {
   const { items, getSummary } = useCartStore();
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [orderId, setOrderId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const { data: session, status } = useSession();
   const summary = getSummary();
   const router = useRouter();
@@ -139,17 +140,33 @@ export default function PaymentPage() {
         })
         .catch((err) => {
           console.error("Payment setup error:", err);
+          setError(err.message || "Could not initialize checkout.");
           toast.error("Payment setup failed", err.message || "Could not initialize checkout.");
         });
     }
   }, [items, router, status]);
 
-  if (!clientSecret) {
+  if (error || !clientSecret) {
     return (
       <div className="container py-24 text-center">
-        <div className="skeleton w-full max-w-md h-96 mx-auto rounded-2xl mb-8" />
-        <p className="text-secondary animate-pulse">Initializing secure checkout...</p>
-        {status === "unauthenticated" && <p className="text-red-400 mt-4">You are not logged in.</p>}
+        {error ? (
+          <div className="card max-w-md mx-auto p-8 border-red-500/30 bg-red-500/5">
+            <h2 className="text-xl font-bold text-red-400 mb-4">Checkout Error</h2>
+            <p className="text-secondary mb-6">{error}</p>
+            <p className="text-xs text-secondary/50 mb-8">
+              Tip: Check if your Stripe API keys are correctly configured in .env
+            </p>
+            <button onClick={() => window.location.reload()} className="btn bg-white/10 hover:bg-white/20 w-full py-3">
+              Try Again
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="skeleton w-full max-w-md h-96 mx-auto rounded-2xl mb-8" />
+            <p className="text-secondary animate-pulse">Initializing secure checkout...</p>
+            {status === "unauthenticated" && <p className="text-red-400 mt-4">You are not logged in.</p>}
+          </>
+        )}
       </div>
     );
   }
