@@ -43,15 +43,23 @@ const STATUS_CONFIG: Record<string, { color: string; bg: string; icon: React.Ele
 };
 
 async function downloadStatement(orderId: string, orderNumber: string) {
-  const res = await fetch(`/api/orders/${orderId}/statement`);
-  if (!res.ok) throw new Error("Failed to generate statement");
+  const url = `/api/orders/${orderId}/statement`;
+  console.log(`[Frontend] Downloading statement from: ${url}`);
+  const res = await fetch(url);
+  if (!res.ok) {
+    const errorText = await res.text();
+    console.error(`[Frontend] Download failed: ${res.status}`, errorText);
+    throw new Error("Failed to generate statement");
+  }
   const blob = await res.blob();
-  const url = URL.createObjectURL(blob);
+  const blobUrl = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = url;
+  a.href = blobUrl;
   a.download = `statement-${orderNumber}.pdf`;
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+  URL.revokeObjectURL(blobUrl);
 }
 
 function OrderCard({ order }: { order: Order }) {
