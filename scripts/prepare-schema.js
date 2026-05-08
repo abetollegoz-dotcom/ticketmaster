@@ -115,7 +115,7 @@ enum PricingRule {
 `;
 
 if (isProduction) {
-  console.log('🚀 Production detected: Restoring PostgreSQL Schema, Enums and Field Types...');
+  console.log('🚀 Production detected: Restoring PostgreSQL Schema with Surgical Precision...');
   
   // 1. Restore Provider
   schema = schema.replace(/provider = "sqlite"/, 'provider = "postgresql"');
@@ -123,22 +123,45 @@ if (isProduction) {
   // 2. Restore Enums
   schema = schema.replace('// ─── Enums ───────────────────────────────────────────────────', '// ─── Enums ───────────────────────────────────────────────────' + ENUMS);
 
-  // 3. Restore Field Types to Enums
-  // We identify them by their default values or names
-  schema = schema.replace(/role\s+String/g, 'role UserRole');
-  schema = schema.replace(/status\s+String/g, 'status EventStatus'); // For Event
-  schema = schema.replace(/category\s+String/g, 'category TicketTypeCategory'); // For TicketType
-  schema = schema.replace(/pricingRule\s+String/g, 'pricingRule PricingRule');
-  schema = schema.replace(/provider\s+String/g, 'provider PaymentProvider');
-  schema = schema.replace(/priority\s+String/g, 'priority SupportTicketPriority');
-  schema = schema.replace(/type\s+String/g, 'type PromoCodeType');
-  // Need to be careful with 'status' as it's used in many models
-  schema = schema.replace(/(\w+)\s+String(\s+@default\((PENDING|VALID|OPEN|DRAFT)\))/g, (match, field, _, def) => {
-    if (def.includes('PENDING')) return `${field} OrderStatus ${match.split('String')[1]}`;
-    if (def.includes('VALID')) return `${field} TicketStatus ${match.split('String')[1]}`;
-    if (def.includes('OPEN')) return `${field} SupportTicketStatus ${match.split('String')[1]}`;
-    return match;
-  });
+  // 3. Restore Field Types to Enums (Model by Model to be safe)
+  // User
+  schema = schema.replace(/model User \{[^}]+\}/g, m => m.replace(/role\s+String/g, 'role UserRole').replace(/@default\("CUSTOMER"\)/g, '@default(CUSTOMER)'));
+  
+  // Event
+  schema = schema.replace(/model Event \{[^}]+\}/g, m => m.replace(/status\s+String/g, 'status EventStatus').replace(/@default\("DRAFT"\)/g, '@default(DRAFT)'));
+
+  // Ticket
+  schema = schema.replace(/model Ticket \{[^}]+\}/g, m => m.replace(/status\s+String/g, 'status TicketStatus').replace(/@default\("VALID"\)/g, '@default(VALID)'));
+
+  // Order
+  schema = schema.replace(/model Order \{[^}]+\}/g, m => m.replace(/status\s+String/g, 'status OrderStatus').replace(/@default\("PENDING"\)/g, '@default(PENDING)'));
+
+  // Payment
+  schema = schema.replace(/model Payment \{[^}]+\}/g, m => 
+    m.replace(/status\s+String/g, 'status PaymentStatus')
+     .replace(/provider\s+String/g, 'provider PaymentProvider')
+     .replace(/@default\("PENDING"\)/g, '@default(PENDING)')
+     .replace(/@default\("STRIPE"\)/g, '@default(STRIPE)')
+  );
+
+  // TicketType
+  schema = schema.replace(/model TicketType \{[^}]+\}/g, m => 
+    m.replace(/category\s+String/g, 'category TicketTypeCategory')
+     .replace(/pricingRule\s+String/g, 'pricingRule PricingRule')
+     .replace(/@default\("GENERAL"\)/g, '@default(GENERAL)')
+     .replace(/@default\("FIXED"\)/g, '@default(FIXED)')
+  );
+
+  // SupportTicket
+  schema = schema.replace(/model SupportTicket \{[^}]+\}/g, m => 
+    m.replace(/status\s+String/g, 'status SupportTicketStatus')
+     .replace(/priority\s+String/g, 'priority SupportTicketPriority')
+     .replace(/@default\("OPEN"\)/g, '@default(OPEN)')
+     .replace(/@default\("MEDIUM"\)/g, '@default(MEDIUM)')
+  );
+
+  // PromoCode
+  schema = schema.replace(/model PromoCode \{[^}]+\}/g, m => m.replace(/type\s+String/g, 'type PromoCodeType').replace(/@default\("PERCENTAGE"\)/g, '@default(PERCENTAGE)'));
 
   // 4. Restore Decimal types
   schema = schema.replace(/ Float\?/g, ' Decimal? @db.Decimal(10, 2)');
@@ -165,10 +188,7 @@ if (isProduction) {
     schema = schema.replace(regex, `${field} String$1 @db.Text`);
   });
 
-  // 8. Remove quotes from defaults
-  schema = schema.replace(/@default\("([A-Z_]+)"\)/g, '@default($1)');
-
-  console.log('✅ PostgreSQL Schema Restored.');
+  console.log('✅ PostgreSQL Schema Restored with Surgical Precision.');
 } else {
   console.log('💻 Local detected: Keeping SQLite Schema...');
 }
