@@ -81,7 +81,7 @@ export function AdminSidebar() {
           </div>
         )}
         <button 
-          onClick={() => signOut({ callbackUrl: "/" })}
+          onClick={() => signOut({ redirect: true, callbackUrl: "/" })}
           className="flex items-center gap-3 w-full px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 transition-colors rounded-xl"
         >
           <LogOut className="w-5 h-5 shrink-0" />
