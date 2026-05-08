@@ -28,6 +28,29 @@ export default function AdminOrdersPage() {
     }
   };
 
+  const handleApprove = async (id: string) => {
+    if (!confirm("Are you sure you want to approve this order and issue tickets?")) return;
+    
+    try {
+      const res = await fetch(`/api/admin/orders/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderStatus: "CONFIRMED",
+          paymentStatus: "COMPLETED",
+          manualPaymentNote: "Manually approved via WhatsApp workflow."
+        })
+      });
+      
+      if (!res.ok) throw new Error("Failed to approve order");
+      
+      toast.success("Order Approved!", "Tickets have been issued and sent to the client.");
+      fetchOrders();
+    } catch (err: any) {
+      toast.error("Approval failed", err.message);
+    }
+  };
+
   return (
     <div className="container py-12">
       <div className="flex justify-between items-center mb-10">
@@ -101,9 +124,19 @@ export default function AdminOrdersPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <Link href={`/admin/orders/${order.id}`} className="btn-ghost p-2 inline-flex items-center gap-2 text-xs">
-                      Review <ChevronRight className="w-3 h-3" />
-                    </Link>
+                    <div className="flex justify-end gap-2">
+                      {order.status === "PENDING" && (
+                        <button 
+                          onClick={() => handleApprove(order.id)}
+                          className="btn bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 p-2 text-xs flex items-center gap-1 border border-emerald-500/20"
+                        >
+                          <CheckCircle className="w-3 h-3" /> Approve
+                        </button>
+                      )}
+                      <Link href={`/admin/orders/${order.id}`} className="btn-ghost p-2 inline-flex items-center gap-2 text-xs">
+                        Review <ChevronRight className="w-3 h-3" />
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))

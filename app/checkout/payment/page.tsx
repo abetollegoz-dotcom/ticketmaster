@@ -45,23 +45,28 @@ function CheckoutForm({ clientSecret, orderId }: { clientSecret: string, orderId
   const handleFallback = async () => {
     setFallbackLoading(true);
     try {
-      const res = await fetch("/api/support/tickets", {
+      const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "+1234567890";
+      const message = `Hello! I would like to pay for my order ${orderId} using an alternative method. Total: ${formatCurrency(useCartStore.getState().getSummary().total)}`;
+      const whatsappUrl = `https://wa.me/${whatsappNumber.replace("+", "")}?text=${encodeURIComponent(message)}`;
+
+      // Create a support ticket for record keeping
+      await fetch("/api/support/tickets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          subject: "Alternative Payment Request",
-          message: "I would like to complete my payment using an alternative method.",
+          subject: "WhatsApp Payment Request",
+          message: `Client redirected to WhatsApp for Order ${orderId}.`,
           priority: "HIGH",
           category: "Payment",
           orderId: orderId,
         }),
       });
 
-      if (!res.ok) throw new Error("Failed to contact support");
+      window.open(whatsappUrl, "_blank");
+      toast.success("Redirecting to WhatsApp...", "Please chat with the organizer to complete your payment.");
       
-      toast.success("Request sent!", "The organizer will contact you shortly with payment instructions.");
-      clearCart();
-      router.push("/checkout/success?fallback=true");
+      // We don't clear the cart yet, let them see the success/pending page
+      router.push(`/checkout/success?pending=true&orderId=${orderId}`);
     } catch (err: any) {
       toast.error("Request failed", err.message);
       setFallbackLoading(false);

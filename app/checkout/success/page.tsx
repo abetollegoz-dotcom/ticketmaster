@@ -3,16 +3,32 @@ import Link from "next/link";
 import { CheckCircle, Ticket, Calendar, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
+import { useSearchParams } from "next/navigation";
+import { useCartStore } from "@/store";
+import { useEffect } from "react";
+
 export default function SuccessPage() {
+  const searchParams = useSearchParams();
+  const isPending = searchParams.get("pending") === "true";
+  const orderId = searchParams.get("orderId");
+  const { clearCart } = useCartStore();
+
+  useEffect(() => {
+    // Clear cart on successful landing here if it wasn't cleared yet
+    if (!isPending) {
+      clearCart();
+    }
+  }, [isPending, clearCart]);
+
   return (
     <div className="container py-24 flex flex-col items-center text-center">
       <motion.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: "spring", damping: 12 }}
-        className="w-24 h-24 bg-emerald-500/10 rounded-full flex items-center justify-center mb-8"
+        className={`w-24 h-24 ${isPending ? 'bg-amber-500/10' : 'bg-emerald-500/10'} rounded-full flex items-center justify-center mb-8`}
       >
-        <CheckCircle className="w-12 h-12 text-emerald-400" />
+        <CheckCircle className={`w-12 h-12 ${isPending ? 'text-amber-400' : 'text-emerald-400'}`} />
       </motion.div>
 
       <motion.h1
@@ -20,7 +36,7 @@ export default function SuccessPage() {
         animate={{ opacity: 1, y: 0 }}
         className="text-4xl font-bold mb-4"
       >
-        Payment Successful!
+        {isPending ? "Order Placed!" : "Payment Successful!"}
       </motion.h1>
       
       <motion.p
@@ -29,7 +45,9 @@ export default function SuccessPage() {
         transition={{ delay: 0.1 }}
         className="text-secondary text-lg mb-12 max-w-md"
       >
-        Your tickets are confirmed and have been sent to your email. You can also find them in your dashboard.
+        {isPending 
+          ? `Your order ${orderId ? `#${orderId}` : ''} is pending manual approval. Once the organizer confirms your payment, your QR code tickets will appear in your dashboard.` 
+          : "Your tickets are confirmed and have been sent to your email. You can also find them in your dashboard."}
       </motion.p>
 
       <motion.div
