@@ -115,7 +115,7 @@ enum PricingRule {
 `;
 
 if (isProduction) {
-  console.log('🚀 Production detected: Restoring PostgreSQL Schema and Enums...');
+  console.log('🚀 Production detected: Restoring PostgreSQL Schema, Enums and Field Types...');
   
   // 1. Restore Provider
   schema = schema.replace(/provider = "sqlite"/, 'provider = "postgresql"');
@@ -123,32 +123,49 @@ if (isProduction) {
   // 2. Restore Enums
   schema = schema.replace('// ─── Enums ───────────────────────────────────────────────────', '// ─── Enums ───────────────────────────────────────────────────' + ENUMS);
 
-  // 3. Restore Decimal types (correct placement of ?)
+  // 3. Restore Field Types to Enums
+  // We identify them by their default values or names
+  schema = schema.replace(/role\s+String/g, 'role UserRole');
+  schema = schema.replace(/status\s+String/g, 'status EventStatus'); // For Event
+  schema = schema.replace(/category\s+String/g, 'category TicketTypeCategory'); // For TicketType
+  schema = schema.replace(/pricingRule\s+String/g, 'pricingRule PricingRule');
+  schema = schema.replace(/provider\s+String/g, 'provider PaymentProvider');
+  schema = schema.replace(/priority\s+String/g, 'priority SupportTicketPriority');
+  schema = schema.replace(/type\s+String/g, 'type PromoCodeType');
+  // Need to be careful with 'status' as it's used in many models
+  schema = schema.replace(/(\w+)\s+String(\s+@default\((PENDING|VALID|OPEN|DRAFT)\))/g, (match, field, _, def) => {
+    if (def.includes('PENDING')) return `${field} OrderStatus ${match.split('String')[1]}`;
+    if (def.includes('VALID')) return `${field} TicketStatus ${match.split('String')[1]}`;
+    if (def.includes('OPEN')) return `${field} SupportTicketStatus ${match.split('String')[1]}`;
+    return match;
+  });
+
+  // 4. Restore Decimal types
   schema = schema.replace(/ Float\?/g, ' Decimal? @db.Decimal(10, 2)');
   schema = schema.replace(/ Float\b/g, ' Decimal @db.Decimal(10, 2)');
   
-  // 4. Restore Json types
+  // 5. Restore Json types
   const jsonFields = ['metadata', 'data', 'oldData', 'newData'];
   jsonFields.forEach(field => {
     const regex = new RegExp(`${field}\\s+String\\?`, 'g');
     schema = schema.replace(regex, `${field} Json?`);
   });
   
-  // 5. Restore String[] arrays
+  // 6. Restore String[] arrays
   const arrayFields = ['images', 'tags'];
   arrayFields.forEach(field => {
     const regex = new RegExp(`${field}\\s+String\\?`, 'g');
     schema = schema.replace(regex, `${field} String[]`);
   });
 
-  // 6. Restore @db.Text
+  // 7. Restore @db.Text
   const textFields = ['description', 'content', 'message', 'resolution', 'manualPaymentNote', 'refundPolicy'];
   textFields.forEach(field => {
     const regex = new RegExp(`${field}\\s+String(\\??)`, 'g');
     schema = schema.replace(regex, `${field} String$1 @db.Text`);
   });
 
-  // 7. Remove quotes from defaults
+  // 8. Remove quotes from defaults
   schema = schema.replace(/@default\("([A-Z_]+)"\)/g, '@default($1)');
 
   console.log('✅ PostgreSQL Schema Restored.');
