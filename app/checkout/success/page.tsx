@@ -1,13 +1,15 @@
 "use client";
 import Link from "next/link";
-import { CheckCircle, Ticket, Calendar, ArrowRight } from "lucide-react";
+import { CheckCircle, Ticket, Calendar, ArrowRight, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { useSearchParams } from "next/navigation";
 import { useCartStore } from "@/store";
 import { useEffect } from "react";
 
-export default function SuccessPage() {
+import { Suspense } from "react";
+
+function SuccessContent() {
   const searchParams = useSearchParams();
   const isPending = searchParams.get("pending") === "true";
   const orderId = searchParams.get("orderId");
@@ -93,5 +95,18 @@ export default function SuccessPage() {
         </div>
       </motion.div>
     </div>
+  );
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="container py-24 flex flex-col items-center text-center">
+        <Loader2 className="w-12 h-12 text-indigo-500 animate-spin mb-8" />
+        <p className="text-secondary">Loading order details...</p>
+      </div>
+    }>
+      <SuccessContent />
+    </Suspense>
   );
 }
